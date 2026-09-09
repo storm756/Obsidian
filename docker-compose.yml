@@ -1,0 +1,28 @@
+services:
+  web:
+    image: httpd:2.4
+    container_name: obsidian-web
+    volumes:
+      - ./testbed:/usr/local/apache2/htdocs:ro
+    networks:
+      - onionnet
+
+  tor:
+    image: dockurr/tor
+    container_name: obsidian-tor
+    volumes:
+      - ./tor/torrc:/etc/tor/torrc
+      - tor_data:/var/lib/tor
+    depends_on:
+      - web
+    ports:
+      - "9050:9050"
+    networks:
+      - onionnet
+
+networks:
+  onionnet:
+    driver: bridge
+
+volumes:
+  tor_data:

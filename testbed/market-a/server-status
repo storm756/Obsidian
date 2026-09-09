@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Apache Server Status</title>
+<style>body{margin:0;background:#101313;color:#d8dedb;font:15px/1.55 system-ui,sans-serif}main{max-width:880px;margin:auto;padding:32px 20px}a{color:#7bdcb5}header{border-bottom:1px solid #3a4641;margin-bottom:22px}.tag{color:#9db3a9;font-size:.8rem;text-transform:uppercase;letter-spacing:.12em}.entry{background:#18201d;border:1px solid #36443e;border-radius:8px;padding:16px;margin:12px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0c100e;padding:12px;border-radius:5px;font-size:.78rem}small{color:#9db3a9}</style></head>
+<body><main><header><div class="tag">Obsidian controlled training dataset - no real goods or services</div><h1>Apache Server Status</h1></header><p>Apache Server Status for Aster Market</p><pre>Server uptime: 3 days 04 hours 12 minutes
+Server Version: Apache/2.4.58 (training)
+Worker 0: 10.24.8.17
+Worker 1: 10.24.8.18
+Total Accesses: 1842</pre><p>Static, deliberately exposed test fixture.</p><p><a href="/market-a/">Back to Aster Market</a></p></main></body></html>

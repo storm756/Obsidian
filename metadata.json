@@ -1,0 +1,6 @@
+{
+  "name": "Obsidian",
+  "description": "Multi-signal dark web threat actor de-anonymization intelligence platform fusing infrastructure correlation, cross-marketplace entity graphing, and AI stylometric persona linking into explainable attribution confidence scores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
