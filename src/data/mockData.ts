@@ -104,7 +104,7 @@ export const BENCHMARK_CASES: ThreatActorCase[] = [
       isp: 'National Knowledge Network (NKN)',
       asn: 'AS55836',
     },
-    summary: 'Controlled self-hosted Tor hidden service testbed environment. Demonstrates automated detection of planted Apache mod_status leaks, exposed SSH daemon banners, and deliberate PGP subkey cross-signing.',
+    summary: 'Controlled self-hosted Tor hidden-service environment. Demonstrates intentionally exposed static status fixtures, exact identifier reuse, and reviewable cross-site correlation evidence.',
     evidenceCount: 8,
     scores: {
       infrastructure: 99,

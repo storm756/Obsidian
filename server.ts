@@ -28,8 +28,8 @@ async function startServer() {
   app.get('/api/health', (req, res) => {
     res.json({
       status: 'ok',
-      service: 'Charon Dark Web Threat Actor De-anonymization Platform',
-      version: '2.4.0-sih',
+      service: 'Obsidian Controlled Correlation Workspace',
+      version: '1.0.0',
       timestamp: new Date().toISOString(),
       geminiConfigured: Boolean(process.env.GEMINI_API_KEY)
     });
@@ -282,7 +282,7 @@ Provide a concise, highly professional 4-section forensic evaluation:
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Charon Intelligence Engine] Server running on http://localhost:${PORT}`);
+    console.log(`[Obsidian workspace] Server running on http://localhost:${PORT}`);
   });
 }
 

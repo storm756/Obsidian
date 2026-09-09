@@ -19,7 +19,8 @@ import { ThreatActorCase, InfraScanResult, GraphNode, GraphLink } from './types'
 
 export default function App() {
   const [cases, setCases] = useState<ThreatActorCase[]>(BENCHMARK_CASES);
-  const [selectedCase, setSelectedCase] = useState<ThreatActorCase>(BENCHMARK_CASES[0]);
+  // Keep the dashboard anchored on the included authorised fixture by default.
+  const [selectedCase, setSelectedCase] = useState<ThreatActorCase>(BENCHMARK_CASES.find((item) => item.id === 'case-testbed-03') ?? BENCHMARK_CASES[0]);
   
   // Tab union and declared activeTarget & activeMode states
   const [activeTab, setActiveTab] = useState<
@@ -130,7 +131,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-gray-300 flex flex-col selection:bg-cyan-500 selection:text-black font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-300 flex flex-col font-sans">
 
       {/* Top Main Navigation Header */}
       <Header
@@ -207,22 +208,22 @@ export default function App() {
       </main>
 
       {/* Operational Status Footer */}
-      <footer className="border-t border-white/[0.06] bg-[#0c0c0f]/80 backdrop-blur-sm py-4 px-4 sm:px-6 mt-auto text-xs text-zinc-500">
+      <footer className="mt-auto border-t border-slate-800 bg-slate-950 py-4 px-4 sm:px-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span className="text-zinc-300 font-semibold tracking-wide">
-              OBSIDIAN PLATFORM v2.4
+            <span className="text-slate-300 font-semibold tracking-wide">
+              OBSIDIAN CONTROLLED TESTBED
             </span>
-            <span className="text-zinc-700">&bull;</span>
-            <span className="text-zinc-400">
-              National Technical Research Organisation (NTRO)
+            <span className="text-slate-700">&bull;</span>
+            <span className="text-slate-400">
+              Authorised demonstration environment
             </span>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-zinc-400 font-mono text-[11px]">
-              System Status: Operational
+            <span className="font-mono text-[11px] text-slate-400">
+              Scope: self-hosted testbed only
             </span>
           </div>
         </div>
