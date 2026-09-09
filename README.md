@@ -150,6 +150,9 @@ endpoints available on `http://localhost:8000`.
 └── src/                   # React analyst dashboard
 ```
 
+For a full technical continuation guide - including the boundary between live
+features and demo data - read [HANDOVER.md](HANDOVER.md).
+
 ## Safety and scope
 
 Only scan this local, authorised testbed or systems for which you have explicit
