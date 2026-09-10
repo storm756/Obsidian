@@ -76,13 +76,17 @@ def run_pipeline(seed_url: str, session, max_pages: int = 200) -> dict:
         if listing:
             conn.execute(
                 """INSERT INTO listings
-                   (url, handle, category, listing_text, pgp_key, wallet_address, timestamp, extracted_at)
-                   VALUES (?,?,?,?,?,?,?,?)""",
+                   (url, hostname, source_site, handle, category, listing_text, snippet, content_hash, pgp_key, wallet_address, timestamp, extracted_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     url,
+                    listing["hostname"],
+                    listing["source_site"],
                     listing["handle"],
                     listing["category"],
                     listing["listing_text"],
+                    listing["snippet"],
+                    listing["content_hash"],
                     listing["pgp_key"],
                     listing["wallet_address"],
                     listing["timestamp"],

@@ -8,6 +8,8 @@ from db import get_conn
 PGP_RE = re.compile(r"-----BEGIN PGP PUBLIC KEY BLOCK-----.*?-----END PGP PUBLIC KEY BLOCK-----", re.DOTALL)
 WALLET_RE = re.compile(r"\b(bc1[a-z0-9]{25,60}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})\b")
 
+import hashlib
+
 def extract_listing(html: str, url: str) -> dict | None:
     soup = BeautifulSoup(html, "html.parser")
     listing_el = soup.select_one("[data-obsidian-listing='true']")
@@ -21,10 +23,22 @@ def extract_listing(html: str, url: str) -> dict | None:
     wallet_match = WALLET_RE.search(text)
     category_el = listing_el.select_one(".category")
     timestamp_el = listing_el.select_one("time.timestamp")
+    
+    parsed = urlparse(url)
+    hostname = parsed.netloc
+    path_parts = parsed.path.strip("/").split("/")
+    source_site = path_parts[0] if path_parts and path_parts[0] else "root"
+    content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    snippet = text[:350]
+
     return {
+        "hostname": hostname,
+        "source_site": source_site,
         "handle": handle_el.get_text(strip=True),
         "category": category_el.get_text(strip=True) if category_el else None,
         "listing_text": text[:2000],
+        "snippet": snippet,
+        "content_hash": content_hash,
         "pgp_key": pgp_match.group(0) if pgp_match else None,
         "wallet_address": wallet_match.group(0) if wallet_match else None,
         "timestamp": timestamp_el.get("datetime") if timestamp_el else None,
@@ -68,8 +82,11 @@ def crawl(seed_url: str, session, max_pages: int = 200):
         listing = extract_listing(html, url)
         if listing:
             conn.execute(
-                "INSERT INTO listings (url, handle, category, listing_text, pgp_key, wallet_address, timestamp, extracted_at) VALUES (?,?,?,?,?,?,?,?)",
-                (url, listing["handle"], listing["category"], listing["listing_text"], listing["pgp_key"],
+                """INSERT INTO listings 
+                   (url, hostname, source_site, handle, category, listing_text, snippet, content_hash, pgp_key, wallet_address, timestamp, extracted_at) 
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (url, listing["hostname"], listing["source_site"], listing["handle"], listing["category"], 
+                 listing["listing_text"], listing["snippet"], listing["content_hash"], listing["pgp_key"],
                  listing["wallet_address"], listing["timestamp"], datetime.now(timezone.utc).isoformat())
             )
 

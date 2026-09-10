@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileDown, Network, ScanSearch, Settings2, Sparkles, Waypoints } from 'lucide-react';
+import { Clock, FileDown, Network, RefreshCw, ScanSearch, Settings2, Sparkles, Waypoints } from 'lucide-react';
 import { ThreatActorCase } from '../types';
 
 type Tab = 'overview' | 'setup' | 'infra' | 'graph' | 'stylometry' | 'fusion' | 'timeline';
@@ -12,6 +12,7 @@ interface HeaderProps {
   setSelectedCase: (c: ThreatActorCase) => void;
   onOpenExport: () => void;
   onOpenNewTarget: () => void;
+  onOpenCrawlModal: () => void;
 }
 
 const navigation: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
@@ -21,10 +22,11 @@ const navigation: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
   { id: 'graph', label: 'Entity graph', icon: Network },
   { id: 'stylometry', label: 'Writing analysis', icon: Sparkles },
   { id: 'fusion', label: 'Evidence', icon: FileDown },
+  { id: 'timeline', label: 'Timeline', icon: Clock },
 ];
 
 export const Header: React.FC<HeaderProps> = ({
-  activeTab, setActiveTab, cases, selectedCase, setSelectedCase, onOpenExport, onOpenNewTarget,
+  activeTab, setActiveTab, cases, selectedCase, setSelectedCase, onOpenExport, onOpenNewTarget, onOpenCrawlModal,
 }) => (
   <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
     <div className="mx-auto max-w-7xl px-5 py-4">
@@ -36,9 +38,9 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-semibold tracking-tight text-slate-50">Obsidian</h1>
-              <span className="rounded border border-slate-700 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">DEMO</span>
+              <span className="rounded border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">7 ONIONS ACTIVE</span>
             </div>
-            <p className="text-xs text-slate-400">Controlled correlation workspace</p>
+            <p className="text-xs text-slate-400">NTRO Threat Actor De-anonymization Workspace</p>
           </div>
         </div>
 
@@ -49,9 +51,13 @@ export const Header: React.FC<HeaderProps> = ({
               const next = cases.find((item) => item.id === e.target.value);
               if (next) setSelectedCase(next);
             }} className="max-w-52 bg-transparent text-xs font-medium text-slate-200 outline-none">
-              {cases.map((item) => <option key={item.id} value={item.id} className="bg-slate-900">{item.codename}</option>)}
+              {cases.map((item) => <option key={item.id} value={item.id} className="bg-slate-900">{item.codename} ({item.primaryHandle})</option>)}
             </select>
           </div>
+          <button onClick={onOpenCrawlModal} className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-500">
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>Crawl Testbed</span>
+          </button>
           <button onClick={onOpenNewTarget} className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-900">New case</button>
           <button onClick={onOpenExport} className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-500">Export report</button>
         </div>

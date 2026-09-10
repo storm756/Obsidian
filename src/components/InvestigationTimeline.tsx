@@ -124,7 +124,7 @@ export const InvestigationTimeline: React.FC<InvestigationTimelineProps> = ({
                     {getCategoryIcon(event.category)}
                   </div>
                   <h3 className="text-sm font-semibold text-white">
-                    {event.title}
+                    {event.title || (event as any).eventTitle || 'Operational Milestone'}
                   </h3>
                 </div>
 
@@ -144,8 +144,8 @@ export const InvestigationTimeline: React.FC<InvestigationTimelineProps> = ({
               </p>
 
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-white/[0.06] text-xs text-zinc-400">
-                <span>Source: <strong className="text-zinc-200 font-medium">{event.source}</strong></span>
-                <span className="text-emerald-400/90 font-medium">Corroborated by: {event.corroboratedBy}</span>
+                <span>Source: <strong className="text-zinc-200 font-medium">{event.source || (event as any).sourcePlatform || 'Tor Testbed'}</strong></span>
+                <span className="text-emerald-400/90 font-medium">Corroborated by: {event.corroboratedBy || (event as any).significance || (event as any).evidenceRef || 'Exact Fingerprint Match'}</span>
               </div>
             </div>
           </div>

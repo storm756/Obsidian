@@ -11,7 +11,12 @@ import {
   TrendingUp,
   Cpu,
   Network,
-  Server
+  Server,
+  Sparkles,
+  Copy,
+  Check,
+  Brain,
+  X
 } from 'lucide-react';
 import { ThreatActorCase, AttributionSignalBreakdown } from '../types';
 
@@ -32,6 +37,55 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
   const [wInfra, setWInfra] = useState<number>(40);
   const [wGraph, setWGraph] = useState<number>(35);
   const [wStylo, setWStylo] = useState<number>(25);
+
+  // Live AI Synthesis State
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [aiDossier, setAiDossier] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [copiedDossier, setCopiedDossier] = useState(false);
+
+  const handleRunAiSynthesis = async () => {
+    setIsSynthesizing(true);
+    setAiError(null);
+    setAiDossier(null);
+    try {
+      let res = await fetch('/api/gemini-case-synthesis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetCase: selectedCase, signals }),
+      });
+
+      if (!res.ok) {
+        res = await fetch('http://localhost:8000/api/gemini-case-synthesis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetCase: selectedCase, signals }),
+        });
+      }
+
+      const data = await res.json();
+      if (data.dossier) {
+        setAiDossier(data.dossier);
+      } else if (data.error) {
+        setAiError(data.error);
+      } else {
+        setAiError('Failed to generate AI synthesis');
+      }
+    } catch (e: any) {
+      console.error('Synthesis error:', e);
+      setAiError(e.message || 'Error reaching AI synthesis service');
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
+
+  const handleCopyDossier = () => {
+    if (aiDossier) {
+      navigator.clipboard.writeText(aiDossier);
+      setCopiedDossier(true);
+      setTimeout(() => setCopiedDossier(false), 2000);
+    }
+  };
 
   const totalWeight = wInfra + wGraph + wStylo;
   const normInfra = totalWeight > 0 ? wInfra / totalWeight : 0.4;
@@ -70,6 +124,23 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
 
         <div className="flex items-center gap-3">
           <button
+            onClick={handleRunAiSynthesis}
+            disabled={isSynthesizing}
+            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-medium text-xs transition-all flex items-center gap-2 shadow-sm shadow-purple-950/40"
+          >
+            {isSynthesizing ? (
+              <>
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                <span>Synthesizing AI Dossier...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 text-purple-200" />
+                <span>Generate AI Forensic Synthesis</span>
+              </>
+            )}
+          </button>
+          <button
             onClick={onOpenExport}
             className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs transition-all flex items-center gap-2 shadow-sm"
           >
@@ -78,6 +149,68 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Live AI Dossier Card (Gemini 3.6 Flash) */}
+      {aiDossier && (
+        <div className="bg-[#141417] border border-purple-500/40 rounded-2xl p-6 shadow-xl relative animate-in fade-in duration-300">
+          <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.08] mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-purple-950/60 border border-purple-700/60 text-purple-300">
+                <Brain className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-white">
+                    NTRO Court-Admissible De-Anonymization Dossier
+                  </h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/60 border border-purple-700/60 text-purple-300">
+                    GEMINI 3.6 FLASH · LIVE
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Target: <span className="text-white font-semibold">{selectedCase.codename}</span> ({selectedCase.primaryHandle}) · Evidence Corroboration Engine
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopyDossier}
+                className="px-3 py-1.5 rounded-lg bg-[#0b0b0e] hover:bg-white/[0.05] border border-white/[0.08] text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
+              >
+                {copiedDossier ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-400">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Dossier</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setAiDossier(null)}
+                className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.05] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-5 font-mono text-xs text-zinc-200 whitespace-pre-wrap leading-relaxed max-h-[500px] overflow-y-auto scrollbar-thin">
+            {aiDossier}
+          </div>
+        </div>
+      )}
+
+      {aiError && (
+        <div className="bg-rose-950/40 border border-rose-800/60 rounded-xl p-4 text-xs text-rose-300 flex items-center justify-between">
+          <span>Failed to generate AI synthesis: {aiError}</span>
+          <button onClick={() => setAiError(null)} className="text-rose-400 hover:text-rose-200">Dismiss</button>
+        </div>
+      )}
 
       {/* Dynamic Fusion Scorecard & Weight Calibration */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

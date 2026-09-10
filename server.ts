@@ -8,9 +8,10 @@ dotenv.config();
 
 let aiClient: GoogleGenAI | null = null;
 function getAIClient(): GoogleGenAI | null {
-  if (!aiClient && process.env.GEMINI_API_KEY) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!aiClient && apiKey) {
     try {
-      aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      aiClient = new GoogleGenAI({ apiKey });
     } catch (e) {
       console.warn('Failed to initialize Gemini client:', e);
     }
@@ -215,16 +216,7 @@ async function startServer() {
       const ai = getAIClient();
 
       if (!ai) {
-        // Fallback forensic reasoning when API key is not configured
-        return res.json({
-          provider: 'local-heuristic',
-          analysis: `FORENSIC LINGUISTIC EVALUATION REPORT
-- Subject Comparison: [${handleA || 'Sample A'}] vs [${handleB || 'Sample B'}]
-- Subconscious Markers: Both samples exhibit correlated use of polite modal constructions ("we kindly request/insist") coupled with strict imperative transactional boundaries.
-- Punctuation Signature: Recurrent trailing ellipses (...) used as paragraph transitions, accompanied by spaced double-hyphens for announcement headers.
-- Operational Framing: Strong concordance in shipping vocabulary ("dispatched within 12h", "stealth vacuum packed", "50% reship upon tracking").
-- De-anonymization Assessment: The idiosyncratic syntactical cadence strongly indicates authorship continuity, suggesting a deliberate persona rebrand rather than independent operators.`
-        });
+        return res.status(500).json({ error: 'Gemini AI client not initialized' });
       }
 
       const prompt = `You are a Senior Digital Forensics Linguistic Specialist working with the National Technical Research Organisation (NTRO) on dark web threat actor de-anonymization.
@@ -245,23 +237,112 @@ Provide a concise, highly professional 4-section forensic evaluation:
 4. Forensic Authorship Conclusion (Definitive evidentiary assessment: High Confidence Same Author, Probable Same Author, or Inconclusive, with reasoning suitable for investigative case documentation).`;
 
       const geminiResponse = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-3.6-flash',
         contents: prompt,
       });
 
       const analysisText = geminiResponse.text || 'Forensic analysis completed.';
       res.json({
-        provider: 'gemini-3.8-flash',
+        provider: 'gemini-3.6-flash',
         analysis: analysisText
       });
     } catch (err: any) {
       console.error('Gemini error:', err);
+      res.status(500).json({
+        error: err.message || 'Gemini API call failed',
+        details: String(err)
+      });
+    }
+  });
+
+  // Server-side AI Multi-Signal Attribution Dossier Synthesis
+  app.post('/api/gemini-case-synthesis', async (req, res) => {
+    try {
+      const { targetCase, signals } = req.body;
+      const ai = getAIClient();
+
+      if (!ai) {
+        return res.status(500).json({ error: 'Gemini AI client not initialized' });
+      }
+
+      const signalsSummary = Array.isArray(signals)
+        ? signals.map((s: any) => `- [${s.category}] ${s.signalName}: ${s.verifiableProof} (Confidence: ${s.evidenceConfidence || s.rawScore}%)`).join('\n')
+        : 'Telemetry data collected across infrastructure, entity graph, and stylometric layers.';
+
+      const prompt = `You are the Chief Intelligence Analyst at the National Technical Research Organisation (NTRO) specializing in Dark Web Threat Actor De-Anonymization and Multi-Signal Corroboration.
+Generate an authoritative, court-admissible Evidentiary Attribution & De-Anonymization Dossier for:
+Case Codename: ${targetCase?.codename || 'TARGET-CASE'} (${targetCase?.caseNumber || 'CASE-001'})
+Primary Observed Handle: ${targetCase?.primaryHandle || 'Unknown'}
+Corroborated Aliases: ${Array.isArray(targetCase?.aliases) ? targetCase.aliases.join(', ') : 'None'}
+Attributed Physical/Origin Lead: ${targetCase?.suspectedRealIdentity?.clearnetIP || 'Leaked Origin IP'} (${targetCase?.suspectedRealIdentity?.location || 'Unknown location'})
+Threat Category: ${targetCase?.primaryCategory || 'Tor Darknet Syndicate'}
+Composite Score: ${targetCase?.scores?.composite || 95}% (Infra: ${targetCase?.scores?.infrastructure}%, Graph: ${targetCase?.scores?.entityGraph}%, Stylometry: ${targetCase?.scores?.stylometry}%)
+
+Independent Evidentiary Telemetry Streams:
+${signalsSummary}
+
+Produce a formal, highly structured 4-section de-anonymization intelligence assessment:
+1. EXECUTIVE SUMMARY & ATTRIBUTION CERTAINTY (Mathematical confidence, de-anonymization verdict, and cross-layer corroboration)
+2. PHYSICAL & NETWORK INFRASTRUCTURE CORROBORATION (Origin IP leak analysis, datacenter/ASN attribution, and Tor configuration errors)
+3. CRYPTOGRAPHIC & ON-CHAIN IDENTITY CLUSTERING (OpenPGP key-block fingerprint exact match, Bitcoin SegWit wallet co-spend clustering)
+4. BEHAVIORAL STYLOMETRIC AUDIT & LEGAL ADMISSIBILITY (Idiosyncratic syntax preservation, court admissibility under Indian IT Act 2000 / Daubert standard, and recommended legal steps).`;
+
+      const geminiResponse = await ai.models.generateContent({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+      });
+
       res.json({
-        provider: 'local-fallback',
-        analysis: `FORENSIC LINGUISTIC EVALUATION (OFFLINE FALLBACK)
-- Cross-Sample Consistency: The syntactic structure reveals matching sentence length and vocabulary concentration.
-- Punctuation Peculiarities: Matching ellipses syntax (...) and standardized notice headers.
-- Conclusion: Evidentiary profile supports persona continuity across marketplace migrations.`
+        provider: 'gemini-3.6-flash',
+        dossier: geminiResponse.text || 'Intelligence synthesis completed.'
+      });
+    } catch (err: any) {
+      console.error('Gemini synthesis error:', err);
+      res.status(500).json({
+        error: err.message || 'Gemini synthesis failed',
+        details: String(err)
+      });
+    }
+  });
+
+  // Server-side AI Infrastructure De-Anonymization Analysis
+  app.post('/api/gemini-infra-analysis', async (req, res) => {
+    try {
+      const { scanResult } = req.body;
+      const ai = getAIClient();
+
+      if (!ai) {
+        return res.status(500).json({ error: 'Gemini AI client not initialized' });
+      }
+
+      const prompt = `You are a Senior Network Forensics Investigator at the National Technical Research Organisation (NTRO).
+Analyze the following live Tor hidden service infrastructure scan results:
+Target: ${scanResult?.onionUrl || 'Hidden Service'}
+Server Banner: ${scanResult?.serverBanner || 'Unknown'}
+Status Page Exposed: ${scanResult?.exposedStatusPage ? 'YES (/server-status)' : 'NO'}
+Leaked Internal IPs: ${JSON.stringify(scanResult?.statusPageDetails?.internalIPs || [])}
+Leaked Origin Server IP: ${scanResult?.leakedOriginIP?.ip || 'None'} (${scanResult?.leakedOriginIP?.city || ''}, ${scanResult?.leakedOriginIP?.country || ''} - ISP: ${scanResult?.leakedOriginIP?.isp || 'Unknown'})
+Risk Score: ${scanResult?.riskScore || 0}/100
+
+Provide a concise, 3-section forensic network assessment:
+1. Attack Surface & Misconfiguration Vector (How the hidden service leaked real topology)
+2. De-Anonymization Evidentiary Quality (Forensic reliability of the leaked IP and routing hops)
+3. Subpoena & Datacenter Interception Plan (Concrete steps for LEA to target the upstream ISP/hosting provider).`;
+
+      const geminiResponse = await ai.models.generateContent({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+      });
+
+      res.json({
+        provider: 'gemini-3.6-flash',
+        analysis: geminiResponse.text || 'Infrastructure evaluation completed.'
+      });
+    } catch (err: any) {
+      console.error('Gemini infra error:', err);
+      res.status(500).json({
+        error: err.message || 'Gemini infra analysis failed',
+        details: String(err)
       });
     }
   });
@@ -269,7 +350,12 @@ Provide a concise, highly professional 4-section forensic evaluation:
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        watch: {
+          ignored: ['**/backend/**', '**/testbed/**', '**/tor/**', '**/*.db', '**/*.json'],
+        },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

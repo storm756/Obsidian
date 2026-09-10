@@ -85,7 +85,7 @@ export interface InfraScanResult {
 export interface GraphNode {
   id: string;
   label: string;
-  type: 'actor' | 'marketplace' | 'pgp' | 'wallet' | 'infrastructure' | 'forum';
+  type: 'actor' | 'marketplace' | 'pgp' | 'wallet' | 'infrastructure' | 'forum' | 'origin_ip' | string;
   threatLevel?: ThreatLevel;
   properties: Record<string, any>;
   x?: number;
@@ -97,10 +97,12 @@ export interface GraphNode {
 export interface GraphLink {
   source: string | GraphNode;
   target: string | GraphNode;
-  relationship: 'OPERATED_ON' | 'USED_PGP' | 'TRANSACTED_WITH' | 'HOSTED_ON' | 'VOUCHED_FOR' | 'ALIAS_OF' | 'ORIGIN_IP_LEAK';
+  relationship: string;
   confidence: number; // 0 - 100
   evidenceSource: string;
   observedDate: string;
+  evidenceHash?: string;
+  snippet?: string;
 }
 
 export interface StylometricProfile {

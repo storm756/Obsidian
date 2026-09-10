@@ -14,7 +14,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS urls (
         url TEXT PRIMARY KEY,
         hostname TEXT,
-        source_folder TEXT,        -- market-a, forum-b, etc.
+        source_folder TEXT,        -- market-a, forum-b, escrow, etc.
         crawled BOOLEAN DEFAULT 0,
         discovered_at TEXT,
         crawled_at TEXT
@@ -23,9 +23,13 @@ def init_db():
     CREATE TABLE IF NOT EXISTS listings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         url TEXT REFERENCES urls(url),
+        hostname TEXT,
+        source_site TEXT,          -- market-a, market-b, forum-a, etc.
         handle TEXT,
         category TEXT,
         listing_text TEXT,
+        snippet TEXT,
+        content_hash TEXT,
         pgp_key TEXT,
         wallet_address TEXT,
         timestamp TEXT,
@@ -35,7 +39,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS infra_scans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         hostname TEXT UNIQUE,
-        scan_json TEXT,      -- store the full InfraScanResult as JSON, simplest for a hackathon
+        scan_json TEXT,            -- store the full InfraScanResult as JSON
         scanned_at TEXT
     );
 
@@ -44,11 +48,13 @@ def init_db():
         handle_a TEXT,
         handle_b TEXT,
         similarity_score REAL,
+        metrics_json TEXT,
         computed_at TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_listings_pgp ON listings(pgp_key);
     CREATE INDEX IF NOT EXISTS idx_listings_wallet ON listings(wallet_address);
+    CREATE INDEX IF NOT EXISTS idx_listings_handle ON listings(handle);
     CREATE INDEX IF NOT EXISTS idx_urls_hostname ON urls(hostname);
     CREATE INDEX IF NOT EXISTS idx_stylometry_handles ON stylometry_scores(handle_a, handle_b);
     """)

@@ -100,6 +100,8 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
         return '#fb923c'; // orange-400
       case 'forum':
         return '#8b5cf6'; // purple-500
+      case 'origin_ip':
+        return '#ef4444'; // red-500 target origin
       default:
         return '#94a3b8'; // slate-400
     }
@@ -113,6 +115,7 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
       case 'wallet': return '₿';
       case 'infrastructure': return '🌐';
       case 'forum': return '💬';
+      case 'origin_ip': return '🎯';
       default: return '●';
     }
   };
@@ -121,19 +124,37 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
   // used both by the D3 render effect and by the query console so stats always
   // reflect what's actually being shown, not a hardcoded number.
   const computeFiltered = useCallback((type: string, query: string) => {
-    const filteredNodes = graphData.nodes.filter(n => {
-      const matchesType = type === 'all' || n.type === type;
-      const matchesQuery = query === '' ||
-        n.label.toLowerCase().includes(query.toLowerCase()) ||
-        n.id.toLowerCase().includes(query.toLowerCase());
-      return matchesType && matchesQuery;
+    let baseNodes = graphData.nodes;
+
+    // If filtering by a specific type (e.g. pgp, wallet, infrastructure, origin_ip),
+    // include nodes of that type AND any connected actor/marketplace nodes so relationships are visible
+    if (type !== 'all') {
+      const typeNodeIds = new Set(graphData.nodes.filter(n => n.type === type).map(n => n.id));
+      const connectedIds = new Set<string>();
+      graphData.links.forEach(l => {
+        const s = typeof l.source === 'object' ? (l.source as any).id : l.source;
+        const t = typeof l.target === 'object' ? (l.target as any).id : l.target;
+        if (typeNodeIds.has(s)) connectedIds.add(t);
+        if (typeNodeIds.has(t)) connectedIds.add(s);
+      });
+      baseNodes = graphData.nodes.filter(n => typeNodeIds.has(n.id) || connectedIds.has(n.id));
+    }
+
+    const filteredNodes = baseNodes.filter(n => {
+      if (!query || query.trim() === '') return true;
+      const q = query.toLowerCase().trim();
+      return n.label.toLowerCase().includes(q) ||
+        n.id.toLowerCase().includes(q) ||
+        (n.properties && JSON.stringify(n.properties).toLowerCase().includes(q));
     });
+
     const nodeIds = new Set(filteredNodes.map(n => n.id));
     const filteredLinks = graphData.links.filter(l => {
       const s = typeof l.source === 'object' ? (l.source as any).id : l.source;
       const t = typeof l.target === 'object' ? (l.target as any).id : l.target;
       return nodeIds.has(s) && nodeIds.has(t);
     });
+
     return { filteredNodes, filteredLinks };
   }, [graphData]);
 
@@ -267,14 +288,15 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
     }
   ], [selectedCase]);
 
-  // Execute Query Handler — now computes real stats from the actual filtered
-  // graph instead of returning hardcoded numbers with fake latency jitter.
+  // Execute Query Handler — executes real local Cypher parsing and custom text search
   const handleExecuteCypher = (customQuery?: string) => {
     const rawQuery = customQuery || cypherQuery;
-    const q = rawQuery.trim().toUpperCase();
+    const q = rawQuery.trim();
+    const upper = q.toUpperCase();
     const startTime = performance.now();
 
-    if (q.includes('SHORTESTPATH') || q.includes('INFRASTRUCTURE') || q.includes('PATH')) {
+    // 1. Pathfinding query: shortest path to leaked infrastructure/clearnet IP
+    if (upper.includes('SHORTESTPATH') || upper.includes('PATH =') || upper.includes('PATH=')) {
       const path = handleTraceEvidencePath();
       const elapsed = +(performance.now() - startTime).toFixed(1);
       setCypherStats({
@@ -287,24 +309,50 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
       return;
     }
 
+    // 2. Detect entity type filter
     let nextFilter = 'all';
-    if (q.includes('PGP') || q.includes('USED_PGP')) nextFilter = 'pgp';
-    else if (q.includes('WALLET') || q.includes('TRANSACTED_WITH')) nextFilter = 'wallet';
+    if (upper.includes(':PGP') || upper.includes('USED_PGP') || upper.includes('PGPKEY')) nextFilter = 'pgp';
+    else if (upper.includes(':CRYPTO') || upper.includes('WALLET') || upper.includes('TRANSACTED_WITH')) nextFilter = 'wallet';
+    else if (upper.includes(':INFRASTRUCTURE') || upper.includes('TOR')) nextFilter = 'infrastructure';
+    else if (upper.includes(':ORIGIN') || upper.includes('CLEARNET') || upper.includes('ORIGIN_IP')) nextFilter = 'origin_ip';
+    else if (upper.includes(':MARKETPLACE') || upper.includes('MARKET')) nextFilter = 'marketplace';
+    else if (upper.includes(':FORUM')) nextFilter = 'forum';
+    else if (upper.includes(':THREATACTOR') || upper.includes(':ACTOR')) nextFilter = 'actor';
+
+    // 3. Extract search term if present
+    let term = '';
+    const handleMatch = q.match(/handle\s*:\s*["']([^"']+)["']/i) || 
+                        q.match(/CONTAINS\s*["']([^"']+)["']/i) ||
+                        q.match(/label\s*=\s*["']([^"']+)["']/i) ||
+                        q.match(/WHERE\s+.*?["']([^"']+)["']/i);
+    if (handleMatch) {
+      term = handleMatch[1];
+    } else if (!upper.startsWith('MATCH') && !upper.startsWith('RETURN') && q.length > 0) {
+      term = q;
+    }
 
     setFilterType(nextFilter);
+    setSearchQuery(term);
     setPathfindingActive(false);
 
-    const { filteredNodes, filteredLinks } = computeFiltered(nextFilter, searchQuery);
+    const { filteredNodes, filteredLinks } = computeFiltered(nextFilter, term);
     const elapsed = +(performance.now() - startTime).toFixed(1);
+
+    // Auto-select first matching node if any found
+    if (filteredNodes.length > 0) {
+      setSelectedNode(filteredNodes[0]);
+    }
 
     setCypherStats({
       executionTimeMs: elapsed,
       recordsCount: filteredNodes.length + filteredLinks.length,
       nodesCount: filteredNodes.length,
       edgesCount: filteredLinks.length,
-      lastExecuted: nextFilter === 'all'
-        ? 'Full graph query executed against local store'
-        : `Filtered to entity type "${nextFilter}"`,
+      lastExecuted: term 
+        ? `Matched "${term}" (${filteredNodes.length} nodes, ${filteredLinks.length} edges)`
+        : nextFilter === 'all'
+        ? `Full graph query (${filteredNodes.length} nodes, ${filteredLinks.length} edges)`
+        : `Filtered to "${nextFilter}" (${filteredNodes.length} nodes, ${filteredLinks.length} edges)`,
     });
   };
 
@@ -733,7 +781,7 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
             <Filter className="w-3.5 h-3.5" />
             <span>Filter Entities:</span>
           </span>
-          {['all', 'actor', 'marketplace', 'pgp', 'wallet', 'infrastructure'].map((type) => (
+          {['all', 'actor', 'origin_ip', 'infrastructure', 'marketplace', 'forum', 'pgp', 'wallet'].map((type) => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
@@ -743,7 +791,7 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
                   : 'bg-[#0b0b0e] text-zinc-400 border border-white/[0.06] hover:text-zinc-200'
               }`}
             >
-              {type}
+              {type === 'origin_ip' ? 'Origin IP' : type}
             </button>
           ))}
         </div>
@@ -819,6 +867,10 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
               <span className="text-zinc-300">Darknet Marketplace</span>
             </div>
             <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+              <span className="text-zinc-300">Discussion / Vouch Forum</span>
+            </div>
+            <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
               <span className="text-zinc-300">PGP Key Fingerprint</span>
             </div>
@@ -828,7 +880,11 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
-              <span className="text-zinc-300">Clearnet / Onion Infrastructure</span>
+              <span className="text-zinc-300">Tor Hidden Service Infrastructure</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              <span className="text-zinc-300">Attributed Clearnet Origin IP</span>
             </div>
           </div>
 

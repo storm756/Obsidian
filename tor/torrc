@@ -1,3 +1,22 @@
 SocksPort 0.0.0.0:9050
+
 HiddenServiceDir /var/lib/tor/testbed/
+HiddenServicePort 80 web:80
+
+HiddenServiceDir /var/lib/tor/market-a/
+HiddenServicePort 80 web:80
+
+HiddenServiceDir /var/lib/tor/market-b/
+HiddenServicePort 80 web:80
+
+HiddenServiceDir /var/lib/tor/market-c/
+HiddenServicePort 80 web:80
+
+HiddenServiceDir /var/lib/tor/forum-a/
+HiddenServicePort 80 web:80
+
+HiddenServiceDir /var/lib/tor/forum-b/
+HiddenServicePort 80 web:80
+
+HiddenServiceDir /var/lib/tor/escrow/
 HiddenServicePort 80 web:80
