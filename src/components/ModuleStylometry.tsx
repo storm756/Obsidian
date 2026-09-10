@@ -90,13 +90,18 @@ export const ModuleStylometry: React.FC<ModuleStylometryProps> = ({ selectedCase
   const comparison = backendComparison || compareTexts(textA, textB, handleA, handleB);
 
   // Pre-load quick scenarios
-  const handleLoadScenario = (scenario: 'venom_rebrand' | 'unrelated' | 'shadow_broker') => {
+  const handleLoadScenario = (scenario: 'venom_rebrand' | 'unrelated' | 'shadow_broker' | 'insider_slack') => {
     setAiReport(null);
     if (scenario === 'venom_rebrand') {
       setHandleA('VenomVendor (AlphaBay 2021)');
       setHandleB('Noxious_Direct (Bohemia 2023)');
       setTextA(SAMPLE_TEXTS.sample_venom_alphabay);
       setTextB(SAMPLE_TEXTS.sample_noxious_bohemia);
+    } else if (scenario === 'insider_slack') {
+      setHandleA('Vikram S. (Corporate Slack: #devops-infra)');
+      setHandleB('CorpExfil_Direct (BreachForums Market)');
+      setTextA(SAMPLE_TEXTS.sample_insider_slack);
+      setTextB(SAMPLE_TEXTS.sample_insider_darknet);
     } else if (scenario === 'unrelated') {
       setHandleA('VenomVendor (AlphaBay)');
       setHandleB('RandomMarketVendor_99');
@@ -248,6 +253,13 @@ export const ModuleStylometry: React.FC<ModuleStylometryProps> = ({ selectedCase
             className="px-2.5 py-1 rounded bg-[#111622] hover:bg-[#161d2d] border border-[#1e2433] hover:border-purple-500/40 text-zinc-300 hover:text-white font-mono text-xs transition-colors"
           >
             Benchmark: VenomVendor &rarr; Noxious_Direct
+          </button>
+
+          <button
+            onClick={() => handleLoadScenario('insider_slack')}
+            className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-mono text-xs transition-colors"
+          >
+            Insider: Slack &rarr; Darknet Breach
           </button>
 
           <button

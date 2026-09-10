@@ -124,6 +124,47 @@ export const BENCHMARK_CASES: ThreatActorCase[] = [
       'bc1qtestsyntheticmockwallet0000000011928374',
       '44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otRmV'
     ]
+  },
+  {
+    id: 'case-insider-04',
+    caseNumber: 'ENT-INSD-2024-088',
+    codename: 'PHANTOM-INSIDER',
+    primaryHandle: 'CorpExfil_Direct',
+    aliases: ['InternalLeak_Dev', 'ShadowEngineer_X'],
+    threatLevel: 'CRITICAL',
+    primaryCategory: 'Enterprise Rogue Insider & Source Code Leak',
+    marketplaces: ['BreachForums', 'Bohemia Market', 'Enterprise Slack/Git (Internal)'],
+    firstObserved: '2024-03-14',
+    lastActive: '2024-09-09',
+    status: 'CONFIRMED',
+    suspectedRealIdentity: {
+      name: 'Vikram S. (DevOps Lead / Employee #4092)',
+      alias: 'vikram.s@enterprise.internal',
+      location: 'Workstation WS-SEC-092 (Subnet 10.240.14.88)',
+      clearnetIP: '10.240.14.88 (Corporate DHCP Lease)',
+      isp: 'Internal Enterprise Core Gateway (VLAN-14)',
+      asn: 'AS-ENTERPRISE-PRIVATE',
+    },
+    summary: 'Rogue corporate employee operating darknet escrow and exfiltrating proprietary source code. De-anonymized via internal Tor circuit egress timing correlation on enterprise gateway (10.240.14.88), matched corporate workstation GPG keyring with darknet PGP key (0x4B82EA99), and 94.6% linguistic stylometry concordance between internal Slack messages and darknet breach sale listings.',
+    evidenceCount: 16,
+    scores: {
+      infrastructure: 97,
+      entityGraph: 95,
+      stylometry: 94,
+      composite: 95.5,
+    },
+    onionServices: [
+      'insiderexfil4vj7kmk99201msn3819028.onion',
+      'corpleaksdirect8810293mzn19028.onion'
+    ],
+    pgpKeys: [
+      '0x4B82EA99F10238C1 (RSA 4096, matched Workstation WS-SEC-092 keyring)',
+      'A102 994B 82EA 99F1 0238 C144 8812 0019 44B1 0928'
+    ],
+    cryptoWallets: [
+      'bc1qinsidermonitoredescrowwallet0019284756',
+      '888tCorpExfilPaymentAddress192837465019283'
+    ]
   }
 ];
 
@@ -262,6 +303,53 @@ export const MOCK_INFRA_SCANS: Record<string, InfraScanResult> = {
       leakVector: 'Simulated Apache mod_status + OpenSSH Banner Leak (Plant for Hackathon Demo)',
     },
     riskScore: 99,
+  },
+  'case-insider-04': {
+    onionUrl: 'insiderexfil4vj7kmk99201msn3819028.onion',
+    status: 'ONLINE',
+    testedAt: '2024-09-09T14:22:00Z',
+    serverBanner: 'Apache/2.4.52 (Ubuntu) Corporate-Staging-Build',
+    exposedStatusPage: true,
+    statusPageDetails: {
+      serverUptime: '14 days, 2 hours',
+      totalRequests: 8940,
+      workerSlotsLeaked: true,
+      internalIPs: ['10.240.14.88', '192.168.1.105'],
+    },
+    sslCertificate: {
+      hasSsl: true,
+      issuer: 'CN=corp-sec-internal-ca',
+      subject: 'CN=ws-sec-092.enterprise.internal',
+      serialNumber: '4B:82:EA:99:04:92',
+      sha256Fingerprint: '4b82ea99f10238c1a102994b82ea99f10238c1448812001944b10928a49281c0',
+      validFrom: '2024-01-01',
+      validTo: '2025-01-01',
+      sans: ['ws-sec-092.enterprise.internal', 'dev-vikram.internal'],
+      clearnetMatch: {
+        ip: '10.240.14.88',
+        hostname: 'ws-sec-092.enterprise.internal',
+        country: 'Enterprise Intranet',
+        city: 'Campus LAN (VLAN-14)',
+        asn: 'AS-PRIVATE-ENTERPRISE',
+        confidence: 99,
+      }
+    },
+    openPorts: [80, 443, 22, 9050],
+    descriptorTiming: {
+      skewSeconds: 0.12,
+      ntpSynchronized: true,
+    },
+    leakedOriginIP: {
+      ip: '10.240.14.88',
+      country: 'Internal Corporate Network',
+      city: 'Campus Workstation Cluster',
+      latitude: 28.6139,
+      longitude: 77.2090,
+      isp: 'Internal DHCP Pool (Assigned to Vikram S., DevOps)',
+      asn: 'AS-PRIVATE-CORP',
+      leakVector: 'Exposed Apache /server-status + Internal SSL Cert with Workstation Hostname SAN',
+    },
+    riskScore: 97,
   }
 };
 
@@ -332,6 +420,31 @@ export const MOCK_GRAPH_DATA: Record<string, { nodes: GraphNode[]; links: GraphL
       { source: 'test-onion', target: 'test-ip', relationship: 'ORIGIN_IP_LEAK', confidence: 100, evidenceSource: 'Apache /server-status exposed endpoint', observedDate: '2024-09-05' },
       { source: 'test-synthetic', target: 'test-admin', relationship: 'ALIAS_OF', confidence: 95, evidenceSource: 'Graph + Stylometry test suite', observedDate: '2024-03-01' }
     ]
+  },
+  'case-insider-04': {
+    nodes: [
+      { id: 'actor-corp-exfil', label: 'CorpExfil_Direct', type: 'actor', threatLevel: 'CRITICAL', properties: { role: 'Darknet Breach Persona', status: 'Active 2024' } },
+      { id: 'actor-vikram', label: 'Vikram S. (DevOps Lead)', type: 'actor', threatLevel: 'CRITICAL', properties: { identityLead: 'Employee #4092', department: 'Cloud Infrastructure' } },
+      { id: 'node-workstation', label: 'Host: WS-SEC-092', type: 'infrastructure', properties: { os: 'Ubuntu 22.04 LTS', domain: 'enterprise.internal' } },
+      { id: 'node-internal-ip', label: 'Internal IP: 10.240.14.88', type: 'origin_ip', properties: { vlan: 'VLAN-14 DevOps', dhcpLease: 'Active' } },
+      { id: 'node-pgp', label: 'PGP: 0x4B82EA99F10238C1', type: 'pgp', properties: { bits: 4096, algo: 'RSA', created: '2024-03-12', fingerprint: 'A102 994B 82EA 99F1 0238 C144 8812 0019 44B1 0928' } },
+      { id: 'node-wallet', label: 'BTC: bc1qinsider...4756', type: 'wallet', properties: { asset: 'Bitcoin', balance: '4.82 BTC', cluster: 'Breach Escrow Settlement' } },
+      { id: 'node-onion', label: 'insiderexfil4v...onion', type: 'infrastructure', properties: { service: 'Rogue Exfil Storefront', port: 80 } },
+      { id: 'market-breach', label: 'BreachForums Market', type: 'marketplace', properties: { role: 'Credential & Source Code Leak Market' } },
+      { id: 'channel-slack', label: 'Slack: #devops-infra', type: 'forum', properties: { role: 'Corporate Workplace Communications' } }
+    ],
+    links: [
+      { source: 'actor-corp-exfil', target: 'market-breach', relationship: 'OPERATED_ON', confidence: 99, evidenceSource: 'BreachForums verified listing catalog', observedDate: '2024-03-14' },
+      { source: 'actor-corp-exfil', target: 'node-pgp', relationship: 'USED_PGP', confidence: 100, evidenceSource: 'Signed Darknet Breach Announcement', observedDate: '2024-03-14' },
+      { source: 'actor-corp-exfil', target: 'node-wallet', relationship: 'TRANSACTED_WITH', confidence: 97, evidenceSource: 'Escrow deposit transaction ID 7b92a...', observedDate: '2024-04-02' },
+      { source: 'actor-corp-exfil', target: 'node-onion', relationship: 'HOSTED_ON', confidence: 98, evidenceSource: 'Direct vendor storefront URL in profile', observedDate: '2024-03-20' },
+      { source: 'node-onion', target: 'node-internal-ip', relationship: 'ORIGIN_IP_LEAK', confidence: 99, evidenceSource: 'Apache /server-status handler leaked corporate IP 10.240.14.88', observedDate: '2024-09-09' },
+      { source: 'node-internal-ip', target: 'node-workstation', relationship: 'OPERATED_ON', confidence: 100, evidenceSource: 'Corporate DHCP Lease Table mapped to WS-SEC-092', observedDate: '2024-09-09' },
+      { source: 'node-workstation', target: 'actor-vikram', relationship: 'OPERATED_ON', confidence: 100, evidenceSource: 'Active Directory Kerberos ticket binding for vikram.s', observedDate: '2024-09-09' },
+      { source: 'actor-vikram', target: 'node-pgp', relationship: 'USED_PGP', confidence: 100, evidenceSource: 'osquery EDR discovered identical 4096R key in /home/vikram/.gnupg', observedDate: '2024-09-09' },
+      { source: 'actor-vikram', target: 'channel-slack', relationship: 'OPERATED_ON', confidence: 98, evidenceSource: 'Corporate Slack logs across #devops-infra', observedDate: '2024-09-09' },
+      { source: 'actor-corp-exfil', target: 'actor-vikram', relationship: 'ALIAS_OF', confidence: 95, evidenceSource: 'MCDA Fusion: NetFlow Egress Timing + EDR GPG Key + Slack Stylometry', observedDate: '2024-09-09' }
+    ]
   }
 };
 
@@ -363,7 +476,22 @@ Funds swept through non-custodial mixing channels.`,
   sample_unrelated_vendor: `HELLO EVERYONE WELCOME TO MY SHOP FAST SHIPMENT GUARANTEED!!
 BUY NOW BEST PRICES ON THE MARKET 100% SATISFACTION!!
 CONTACT ME ON WICKR OR TELEGRAM FOR FAST DISCOUNTS.
-NO REFUNDS AFTER TRACKING IS GIVEN. HAVE A NICE DAY.`
+NO REFUNDS AFTER TRACKING IS GIVEN. HAVE A NICE DAY.`,
+
+  sample_insider_slack: `Hey DevOps team...
+All staging deployment tasks must be completed within 12h sprint review cycles.
+We kindly insist on verifying GPG signed commits before pushing to main branch...
+Never push raw AWS credentials to git repositories under any circumstances.
+Kindly check Jira ticket attachments upon code review completion.
+-- Vikram (DevOps Lead)`,
+
+  sample_insider_darknet: `### EXCLUSIVE PROPRIETARY ENTERPRISE SOURCE CODE DUMP ###
+Greetings buyers...
+Complete enterprise core microservices repo dispatched within 12h upon BTC escrow confirmation.
+We kindly insist on using our updated 4096R PGP key for all secret delivery drop info...
+Never send unencrypted plain text inquiries under any circumstances.
+Guaranteed full commit logs and environment variables provided upon payment.
+-- CorpExfil_Direct`
 };
 
 export const MOCK_STYLOMETRIC_PROFILES: Record<string, StylometricProfile> = {
@@ -553,6 +681,48 @@ export const MOCK_TIMELINES: Record<string, TimelineEvent[]> = {
       severity: 'CRITICAL',
       corroboratedBy: 'Local diagnostic tracer',
     },
+  ],
+  'case-insider-04': [
+    {
+      id: 't-in1',
+      date: '2024-03-12',
+      source: 'Corporate EDR (osquery / Endpoint Log)',
+      category: 'PGP_ACTIVITY',
+      title: 'Workstation 4096R GPG Key Generation',
+      description: 'Employee Vikram S. generates 4096-bit RSA key on corporate laptop WS-SEC-092. Keyring matches darknet key 0x4B82EA99F10238C1.',
+      severity: 'HIGH',
+      corroboratedBy: 'EDR GnuPG directory file integrity monitoring',
+    },
+    {
+      id: 't-in2',
+      date: '2024-03-14',
+      source: 'Darknet Market Crawler / BreachForums',
+      category: 'MARKET_TRANSITION',
+      title: 'Breach Listing & Darknet Handle Registration',
+      description: 'Moniker "CorpExfil_Direct" registers on BreachForums offering proprietary microservices source code and enterprise API keys.',
+      severity: 'HIGH',
+      corroboratedBy: 'BreachForums verified archive listing',
+    },
+    {
+      id: 't-in3',
+      date: '2024-04-02',
+      source: 'Internal NetFlow / Zeek Gateway',
+      category: 'INFRA_LEAK',
+      title: 'Tor Circuit Egress Timing Correlation',
+      description: 'Internal IP 10.240.14.88 initiates high-entropy Tor packet bursts exactly 0.8s prior to darknet listing updates (p < 0.0001).',
+      severity: 'CRITICAL',
+      corroboratedBy: 'Cisco NetFlow sensor + Tor Consensus Entry Guard IP',
+    },
+    {
+      id: 't-in4',
+      date: '2024-09-09',
+      source: 'Obsidian Stylometric Engine & Active Directory',
+      category: 'INFRA_LEAK',
+      title: 'CRITICAL: Multi-Signal Attribution & Identity De-Anonymization',
+      description: 'Apache /server-status leak on custom exfil onion exposes internal DHCP IP 10.240.14.88. Active Directory maps lease to Vikram S. Stylometric analysis of employee Slack messages yields 94.6% linguistic match with darknet listing.',
+      severity: 'CRITICAL',
+      corroboratedBy: 'DHCP lease binding + Slack Mosteller-Wallace function word concordance',
+    },
   ]
 };
 
@@ -671,6 +841,38 @@ export const MOCK_FUSION_SIGNALS: Record<string, AttributionSignalBreakdown[]> =
       evidenceSummary: 'Testbed synthetic corpus successfully scored 88% lexical affinity.',
       verifiableProof: 'Yule\'s K and TTR benchmark comparison',
       evidenceConfidence: 90,
+    },
+  ],
+  'case-insider-04': [
+    {
+      signalName: 'Internal Network Egress & Tor Guard Burst Correlation',
+      category: 'INFRASTRUCTURE',
+      weight: 0.40,
+      rawScore: 97,
+      weightedScore: 38.8,
+      evidenceSummary: 'Corporate NetFlow gateway recorded Tor Entry Guard sessions from internal IP 10.240.14.88 with packet burst timing delta < 0.8s of darknet breach posts.',
+      verifiableProof: 'Zeek connection log conn.log matching Tor consensus node 185.220.101.5 on port 9001 with concurrent publish timestamp',
+      evidenceConfidence: 98,
+    },
+    {
+      signalName: 'Endpoint GPG Keyring & Active Directory Identity Binding',
+      category: 'ENTITY_GRAPH',
+      weight: 0.35,
+      rawScore: 95,
+      weightedScore: 33.25,
+      evidenceSummary: 'osquery EDR telemetry discovered 4096-bit RSA key 0x4B82EA99 on Workstation WS-SEC-092 matching the darknet vendor public key block.',
+      verifiableProof: 'Cryptographic hash comparison of pubring.kbx on host WS-SEC-092 mapped via Active Directory Kerberos ticket to user vikram.s',
+      evidenceConfidence: 99,
+    },
+    {
+      signalName: 'Cross-Domain Corporate Slack / Darknet Stylometry',
+      category: 'STYLOMETRY',
+      weight: 0.25,
+      rawScore: 94,
+      weightedScore: 23.5,
+      evidenceSummary: '94.6% stylometric concordance comparing employee Slack/Jira writing with darknet breach posts (identical function word rates: "kindly insist", "within 12h", trailing ellipses).',
+      verifiableProof: 'Mosteller-Wallace function-word cosine similarity + Yule\'s Characteristic K (94.2 vs 95.1) across 45 corporate Slack messages',
+      evidenceConfidence: 94,
     },
   ]
 };
