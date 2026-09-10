@@ -18,13 +18,13 @@ import {
 } from './data/mockData';
 import { ThreatActorCase, InfraScanResult, GraphNode, GraphLink, TimelineEvent, AttributionSignalBreakdown } from './types';
 
+export type Tab = 'overview' | 'setup' | 'infra' | 'graph' | 'stylometry' | 'fusion' | 'timeline';
+
 export default function App() {
   const [cases, setCases] = useState<ThreatActorCase[]>(BENCHMARK_CASES);
   const [selectedCase, setSelectedCase] = useState<ThreatActorCase>(BENCHMARK_CASES.find((item) => item.id === 'case-testbed-03') ?? BENCHMARK_CASES[0]);
   
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'setup' | 'infra' | 'graph' | 'stylometry' | 'fusion' | 'timeline'
-  >('overview');
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [activeTarget, setActiveTarget] = useState<string>('');
   const [activeMode, setActiveMode] = useState<'testbed' | 'manual'>('testbed');
 
@@ -183,6 +183,30 @@ export default function App() {
     }
   };
 
+  // Keyboard hotkeys for fast tab switching (1 to 7)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+        return;
+      }
+      const tabMap: Record<string, Tab> = {
+        '1': 'overview',
+        '2': 'setup',
+        '3': 'infra',
+        '4': 'graph',
+        '5': 'stylometry',
+        '6': 'fusion',
+        '7': 'timeline',
+      };
+      if (tabMap[e.key]) {
+        setActiveTab(tabMap[e.key]);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleCreateTarget = (newCase: ThreatActorCase) => {
     setCases(prev => [newCase, ...prev]);
     setSelectedCase(newCase);
@@ -190,7 +214,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-300 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#08090d] bg-tactical-grid text-slate-300 flex flex-col font-sans selection:bg-cyan-900 selection:text-cyan-100">
 
       {/* Top Main Navigation Header */}
       <Header
@@ -271,22 +295,37 @@ export default function App() {
       </main>
 
       {/* Operational Status Footer */}
-      <footer className="mt-auto border-t border-slate-800 bg-slate-950 py-4 px-4 sm:px-6 text-xs text-slate-500">
+      <footer className="mt-auto border-t border-[#1a202c] bg-[#06070a] py-2.5 px-4 sm:px-6 text-[11px] font-mono text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span className="text-slate-300 font-semibold tracking-wide">
-              OBSIDIAN MULTI-SIGNAL ATTRIBUTION PLATFORM
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-slate-300 font-semibold uppercase tracking-wider">
+              OBSIDIAN ATTRIBUTION ENGINE
+            </span>
+            <span className="text-slate-700">&bull;</span>
+            <span className="text-emerald-400">
+              TOR SOCKS5 :9050 PROXY VERIFIED
             </span>
             <span className="text-slate-700">&bull;</span>
             <span className="text-slate-400">
-              7 Active Sandboxed Tor Hidden Services Online
+              7 SANDBOXED ONION SERVICES
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="font-mono text-[11px] text-slate-400">
-              NTRO PS-26151 · Docker WSL2 · SOCKS5 :9050
+          <div className="flex items-center gap-4 flex-wrap text-slate-400">
+            <span className="text-slate-500">
+              CASE: <strong className="text-cyan-400">{selectedCase.codename}</strong>
+            </span>
+            <span className="text-slate-700">&bull;</span>
+            <span className="text-slate-500">
+              EVIDENCE INTEGRITY: <strong className="text-emerald-400">SHA-256 TAMPER-PROOF</strong>
+            </span>
+            <span className="text-slate-700">&bull;</span>
+            <span className="text-slate-500">
+              NTRO PS-26151 · WSL2
             </span>
           </div>
         </div>

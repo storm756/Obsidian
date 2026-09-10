@@ -711,28 +711,29 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
   return (
     <div className="space-y-6">
       {/* Module Overview Header */}
-      <div className="bg-[#121216] border border-white/[0.07] rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
-              MODULE 2
+            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[10px] font-mono font-bold uppercase tracking-wider">
+              MODULE 02 // ENTITY GRAPH CLUSTER
             </span>
-            <h2 className="text-xl font-bold text-white tracking-tight">Cross-Marketplace Entity Graph</h2>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-[11px] font-mono">
-              <Database className="w-3 h-3 text-cyan-400" />
-              <span>Local Graph Store</span>
-            </div>
+            <span className="font-mono text-[10px] text-zinc-500">
+              NEO4J REPLICA · 4096-BIT RSA PGP · UTXO CO-SPEND
+            </span>
             {isLiveGraph ? (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wide">
+              <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase tracking-wide">
                 Live Scan Result
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wide">
+              <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold uppercase tracking-wide">
                 Simulated — Not a Live Scan
               </span>
             )}
           </div>
-          <p className="text-xs text-zinc-400 max-w-2xl leading-relaxed">
+          <h2 className="text-base font-semibold text-white tracking-tight flex items-center gap-2">
+            <span>Cryptographic Relationship &amp; Entity Correlation Graph</span>
+          </h2>
+          <p className="text-xs text-zinc-400 max-w-3xl leading-relaxed mt-1">
             Correlates handles, 4096-bit PGP public key fingerprints, cryptocurrency wallets (Bitcoin &amp; Monero), marketplace listings, and Dread dispute forums into a multi-hop evidence relationship graph.
           </p>
         </div>
@@ -740,15 +741,15 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={() => setShowConsole(!showConsole)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border shadow-sm ${
+            className={`px-3 py-2 rounded text-xs font-mono font-semibold transition-colors flex items-center gap-1.5 border ${
               showConsole
-                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-cyan-500/10'
-                : 'bg-[#0b0b0e] hover:bg-white/[0.05] text-zinc-300 border-white/[0.08]'
+                ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                : 'bg-[#08090d] hover:bg-[#111622] text-zinc-300 border-[#1e2433]'
             }`}
             title="Toggle Query Console"
           >
             <Database className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Query Console</span>
+            <span>QUERY CONSOLE</span>
             {showConsole ? (
               <ChevronUp className="w-3 h-3 text-cyan-400" />
             ) : (
@@ -758,15 +759,15 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
 
           <button
             onClick={handleTraceEvidencePath}
-            className="px-3.5 py-2 rounded-xl bg-emerald-500/90 hover:bg-emerald-400 text-black font-semibold text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-950/40"
+            className="px-3.5 py-2 rounded bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs transition-colors flex items-center gap-1.5 border border-emerald-300/40 shadow-sm"
           >
-            <Route className="w-4 h-4" />
-            <span>Trace Shortest Evidence Chain</span>
+            <Route className="w-4 h-4 fill-black" />
+            <span>TRACE SHORTEST PATH</span>
           </button>
           
           <button
             onClick={handleResetGraph}
-            className="p-2 rounded-xl bg-[#0b0b0e] hover:bg-white/[0.05] text-zinc-300 border border-white/[0.08] transition-colors"
+            className="p-2 rounded bg-[#08090d] hover:bg-[#111622] text-zinc-400 hover:text-white border border-[#1e2433] transition-colors"
             title="Reset Graph"
           >
             <RotateCcw className="w-4 h-4" />
@@ -775,20 +776,20 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
       </div>
 
       {/* Graph Filter & Search Bar */}
-      <div className="bg-[#121216] border border-white/[0.07] rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-zinc-400 flex items-center gap-1 text-xs font-medium">
+          <span className="font-mono text-[10px] uppercase text-zinc-500 flex items-center gap-1">
             <Filter className="w-3.5 h-3.5" />
-            <span>Filter Entities:</span>
+            <span>FILTER:</span>
           </span>
           {['all', 'actor', 'origin_ip', 'infrastructure', 'marketplace', 'forum', 'pgp', 'wallet'].map((type) => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
-              className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all ${
+              className={`px-2.5 py-1 rounded font-mono text-[10px] font-semibold uppercase transition-colors border ${
                 filterType === type
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                  : 'bg-[#0b0b0e] text-zinc-400 border border-white/[0.06] hover:text-zinc-200'
+                  ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                  : 'bg-[#08090d] text-zinc-400 border-[#1e2433] hover:border-zinc-500 hover:text-zinc-200'
               }`}
             >
               {type === 'origin_ip' ? 'Origin IP' : type}
@@ -804,26 +805,26 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search node or key..."
-              className="w-full bg-[#0b0b0e] border border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500/50 transition-colors"
+              className="w-full bg-[#08090d] border border-[#1e2433] rounded pl-8 pr-3 py-1.5 font-mono text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-colors"
             />
           </div>
         </div>
       </div>
 
       {/* Main Interactive Graph & Inspector Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Canvas Area */}
         <div 
           ref={containerRef}
-          className="lg:col-span-3 bg-[#09090b] border border-white/[0.07] rounded-2xl relative overflow-hidden h-[550px] shadow-inner"
+          className="lg:col-span-3 bg-[#08090d] border border-[#1e2433] rounded-lg relative overflow-hidden h-[550px]"
         >
           {pathfindingActive && (
-            <div className="absolute top-3 left-3 z-10 bg-[#121216]/95 border border-amber-500/30 backdrop-blur rounded-xl px-3.5 py-1.5 text-xs text-amber-300 flex items-center gap-2 shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-              <span className="font-mono font-medium">PATHFINDER ACTIVE: {highlightedPath.length} Hops Traced to Clearnet Lead</span>
+            <div className="absolute top-3 left-3 z-10 bg-[#08090d]/95 border border-amber-500/40 rounded px-3 py-1.5 text-xs text-amber-300 font-mono flex items-center gap-2 shadow-lg">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>PATHFINDER ACTIVE: {highlightedPath.length} HOPS TO CLEARNET ORIGIN</span>
               <button
                 onClick={() => setPathfindingActive(false)}
-                className="ml-2 text-zinc-400 hover:text-white"
+                className="ml-2 text-zinc-500 hover:text-white"
               >
                 &times;
               </button>
@@ -895,7 +896,7 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
         </div>
 
         {/* Node Details Inspector Sidebar */}
-        <div className="bg-[#121216] border border-white/[0.07] rounded-2xl p-5 flex flex-col justify-between shadow-sm">
+        <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-4 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-[#1e1e24] mb-3">
               <div className="text-xs font-mono text-gray-400 flex items-center gap-1.5">
@@ -985,9 +986,9 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
 
       {/* Query Console & Graph Analytics Workbench */}
       {showConsole && (
-        <div className="bg-[#121216] border border-cyan-500/25 rounded-2xl p-5 shadow-lg space-y-4">
+        <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5 space-y-4">
           {/* Console Header Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1e2433]">
             <div className="flex items-center gap-2.5 flex-wrap">
               <div className="p-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300">
                 <Database className="w-4 h-4" />

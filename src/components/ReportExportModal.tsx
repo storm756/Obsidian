@@ -63,12 +63,12 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0c]/80 backdrop-blur-sm p-4">
-      <div className="bg-[#141417] border border-[#1e1e24] rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08090d]/85 backdrop-blur-sm p-4">
+      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
-        <div className="p-4 border-b border-[#1e1e24] flex items-center justify-between bg-[#0e0e11]">
+        <div className="p-4 border-b border-[#1e2433] flex items-center justify-between bg-[#08090d]">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-cyan-950/60 text-cyan-400 border border-cyan-800/60">
+            <div className="p-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/25">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
