@@ -1,20 +1,28 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Header, ActiveView } from './components/Header';
+import { Header, Tab } from './components/Header';
 import { ForensicInspector, ForensicEntity } from './components/ForensicInspector';
+import { CaseOverview } from './components/CaseOverview';
 import { ViewInvestigationCrawl } from './components/ViewInvestigationCrawl';
 import { ModuleEntityGraph } from './components/ModuleEntityGraph';
 import { ViewInfrastructureCorrelator } from './components/ViewInfrastructureCorrelator';
+import { ModuleInfraScan } from './components/ModuleInfraScan';
 import { ViewStylometricMatcher } from './components/ViewStylometricMatcher';
+import { ModuleStylometry } from './components/ModuleStylometry';
+import { FusionLayer } from './components/FusionLayer';
 import { ViewEvidenceLedger } from './components/ViewEvidenceLedger';
+import { InvestigationTimeline } from './components/InvestigationTimeline';
+import { SetupPage } from './components/SetupPage';
 import { ReportExportModal } from './components/ReportExportModal';
+import { NewTargetModal } from './components/NewTargetModal';
+import { CrawlProgressModal } from './components/CrawlProgressModal';
 import {
   BENCHMARK_CASES,
   MOCK_GRAPH_DATA,
   MOCK_TIMELINES,
   MOCK_FUSION_SIGNALS
 } from './data/mockData';
-import { ThreatActorCase, InfraScanResult, GraphNode, GraphLink } from './types';
-import { AlertTriangle, WifiOff, Terminal, Shield } from 'lucide-react';
+import { ThreatActorCase, InfraScanResult, GraphNode, GraphLink, TimelineEvent, AttributionSignalBreakdown } from './types';
+import { WifiOff, Server, Terminal, Sparkles, Scale, Table } from 'lucide-react';
 
 export default function App() {
   const [cases, setCases] = useState<ThreatActorCase[]>(BENCHMARK_CASES);
@@ -22,8 +30,10 @@ export default function App() {
     BENCHMARK_CASES.find((item) => item.id === 'case-venom-01') ?? BENCHMARK_CASES[0]
   );
 
-  const [activeView, setActiveView] = useState<ActiveView>('crawl');
-  const [activeTarget, setActiveTarget] = useState<string>('5ddoqqirppgbbl3rgl7octcxixxzrarvhl5v6s65ycseillxpignm6ad.onion');
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [activeTarget, setActiveTarget] = useState<string>('');
+  const [activeMode, setActiveMode] = useState<'testbed' | 'manual'>('testbed');
+  const [testbedOnion, setTestbedOnion] = useState<string>('');
   const [onionTargets, setOnionTargets] = useState<Record<string, string>>({
     testbed: '5ddoqqirppgbbl3rgl7octcxixxzrarvhl5v6s65ycseillxpignm6ad.onion',
     'market-a': 'q4fldlv4e4pscz7ng7jlpxyqntukjb6org6poihkyhjepu6yrbqx5kqd.onion',
@@ -35,8 +45,15 @@ export default function App() {
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(true);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResults, setScanResults] = useState<Record<string, InfraScanResult>>({});
+
+  // Modals state
   const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [exportFormat, setExportFormat] = useState<'pdf' | 'stix' | 'csv'>('pdf');
+  const [newTargetModalOpen, setNewTargetModalOpen] = useState(false);
+  const [crawlModalOpen, setCrawlModalOpen] = useState(false);
+
+  // Sub-view toggles for Infra and Stylometry to let analysts choose or see both
+  const [infraSubView, setInfraSubView] = useState<'audit' | 'deep_scan'>('audit');
+  const [styloSubView, setStyloSubView] = useState<'diff_matcher' | 'nlp_audit'>('diff_matcher');
 
   // Forensic Inspector State (Persistent 380px drawer)
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(true);
@@ -69,19 +86,22 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
   });
 
   const [liveGraphData, setLiveGraphData] = useState<{ nodes: GraphNode[]; links: GraphLink[] } | null>(null);
-  const [recordCount, setRecordCount] = useState<number>(55);
+  const [liveTimeline, setLiveTimeline] = useState<TimelineEvent[] | null>(null);
+  const [liveSignals, setLiveSignals] = useState<AttributionSignalBreakdown[] | null>(null);
+  const [recordCount, setRecordCount] = useState<number>(337);
 
   // Sync with FastAPI backend
   const refreshAllData = useCallback(async () => {
     try {
-      // 1. Health check & onion targets
+      // 1. Onion targets
       const targetsRes = await fetch('http://localhost:8000/api/onion-targets');
       if (targetsRes.ok) {
         setIsBackendConnected(true);
         const tData = await targetsRes.json();
         if (tData.targets) {
           setOnionTargets(tData.targets);
-          if (tData.targets.testbed) {
+          if (tData.targets.testbed && !testbedOnion) {
+            setTestbedOnion(tData.targets.testbed);
             setActiveTarget(tData.targets.testbed);
           }
         }
@@ -89,7 +109,16 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
         setIsBackendConnected(false);
       }
 
-      // 2. Investigation status & record count
+      // 2. Cases
+      const casesRes = await fetch('http://localhost:8000/api/cases');
+      if (casesRes.ok) {
+        const cData = await casesRes.json();
+        if (Array.isArray(cData) && cData.length > 0) {
+          setCases(cData);
+        }
+      }
+
+      // 3. Status
       const statusRes = await fetch('http://localhost:8000/api/investigation-status');
       if (statusRes.ok) {
         const sData = await statusRes.json();
@@ -98,7 +127,7 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
         }
       }
 
-      // 3. Graph
+      // 4. Graph
       const graphRes = await fetch('http://localhost:8000/api/entity-graph');
       if (graphRes.ok) {
         const gData = await graphRes.json();
@@ -107,25 +136,66 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
         }
       }
 
-      // 4. Cases
-      const casesRes = await fetch('http://localhost:8000/api/cases');
-      if (casesRes.ok) {
-        const cData = await casesRes.json();
-        if (Array.isArray(cData) && cData.length > 0) {
-          setCases(cData);
+      // 5. Timeline
+      const timeRes = await fetch('http://localhost:8000/api/timeline');
+      if (timeRes.ok) {
+        const timeData = await timeRes.json();
+        if (Array.isArray(timeData) && timeData.length > 0) {
+          setLiveTimeline(timeData);
+        }
+      }
+
+      // 6. Fusion Signals
+      const sigRes = await fetch('http://localhost:8000/api/fusion-signals');
+      if (sigRes.ok) {
+        const sigData = await sigRes.json();
+        if (Array.isArray(sigData) && sigData.length > 0) {
+          setLiveSignals(sigData);
         }
       }
     } catch (err) {
       console.warn('Backend not yet reachable on localhost:8000:', err);
       setIsBackendConnected(false);
     }
-  }, []);
+  }, [testbedOnion]);
 
   useEffect(() => {
     refreshAllData();
   }, [refreshAllData]);
 
-  // Run live infrastructure scan
+  // Re-fetch graph when user switches to graph tab
+  useEffect(() => {
+    if (activeTab === 'graph') {
+      fetch('http://localhost:8000/api/entity-graph')
+        .then(res => res.json())
+        .then(data => {
+          if (data.nodes && data.nodes.length > 0) {
+            setLiveGraphData(data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [activeTab]);
+
+  // Re-fetch dynamic fusion signals whenever active case changes
+  useEffect(() => {
+    if (!selectedCase?.id) return;
+    fetch(`http://localhost:8000/api/fusion-signals?case_id=${encodeURIComponent(selectedCase.id)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLiveSignals(data);
+        }
+      })
+      .catch((err) => console.warn('Could not fetch signals for case:', err));
+  }, [selectedCase?.id]);
+
+  const currentScan = scanResults[selectedCase.id];
+  const currentGraphData = liveGraphData ?? MOCK_GRAPH_DATA[selectedCase.id] ?? MOCK_GRAPH_DATA['case-venom-01'];
+  const currentTimeline = liveTimeline ?? MOCK_TIMELINES[selectedCase.id] ?? MOCK_TIMELINES['case-venom-01'];
+  const currentSignals = liveSignals ?? MOCK_FUSION_SIGNALS[selectedCase.id] ?? MOCK_FUSION_SIGNALS['case-venom-01'];
+
+  // Run infrastructure scan through the real backend
   const handleRunScan = async (onionUrl: string) => {
     if (!onionUrl) return;
     setIsScanning(true);
@@ -146,11 +216,11 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
       console.error('Scan failed:', err);
     } finally {
       setIsScanning(false);
-      setActiveView('infra');
+      setActiveTab('infra');
     }
   };
 
-  // Keyboard hotkeys for fast view switching (1-5), Toggle Inspector (Cmd+I / Ctrl+I / [), and Escape to close inspector
+  // Keyboard hotkeys for fast tab switching (1 to 9), Toggle Inspector (Cmd+I / Ctrl+I / [), and Esc
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -171,39 +241,42 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
         return;
       }
 
-      const viewMap: Record<string, ActiveView> = {
-        '1': 'crawl',
-        '2': 'graph',
-        '3': 'infra',
-        '4': 'stylometry',
-        '5': 'ledger',
+      const tabMap: Record<string, Tab> = {
+        '1': 'overview',
+        '2': 'crawl',
+        '3': 'graph',
+        '4': 'infra',
+        '5': 'stylometry',
+        '6': 'fusion',
+        '7': 'ledger',
+        '8': 'timeline',
+        '9': 'setup',
       };
-      if (viewMap[e.key]) {
-        setActiveView(viewMap[e.key]);
+      if (tabMap[e.key]) {
+        setActiveTab(tabMap[e.key]);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const currentGraphData = liveGraphData ?? MOCK_GRAPH_DATA[selectedCase.id] ?? MOCK_GRAPH_DATA['case-venom-01'];
+  const handleCreateTarget = (newCase: ThreatActorCase) => {
+    setCases(prev => [newCase, ...prev]);
+    setSelectedCase(newCase);
+    setActiveTab('overview');
+  };
 
   const handleEntitySelect = (entity: ForensicEntity) => {
     setSelectedEntity(entity);
     setIsInspectorOpen(true);
   };
 
-  const handleExport = (format: 'pdf' | 'stix' | 'csv') => {
-    setExportFormat(format);
-    setExportModalOpen(true);
-  };
-
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans selection:bg-zinc-700 selection:text-white">
-      {/* 1. TOP COMMAND BAR */}
+      {/* 1. TOP COMMAND BAR & 9-MODULE CONTROLLER */}
       <Header
-        activeView={activeView}
-        setActiveView={setActiveView}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         cases={cases}
         selectedCase={selectedCase}
         setSelectedCase={setSelectedCase}
@@ -212,14 +285,15 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
         edgeCount={currentGraphData.links.length}
         isInspectorOpen={isInspectorOpen}
         onToggleInspector={() => setIsInspectorOpen(!isInspectorOpen)}
-        onExportReport={handleExport}
-        onTriggerCrawl={() => setActiveView('crawl')}
+        onOpenExport={() => setExportModalOpen(true)}
+        onOpenNewTarget={() => setNewTargetModalOpen(true)}
+        onOpenCrawlModal={() => setCrawlModalOpen(true)}
         isBackendConnected={isBackendConnected}
       />
 
-      {/* OFFLINE WARNING BANNER (When FastAPI is disconnected) */}
+      {/* OFFLINE WARNING BANNER */}
       {!isBackendConnected && (
-        <div className="bg-amber-950/40 border-b border-amber-800/60 px-4 py-1.5 text-xs font-mono text-amber-300 flex items-center justify-between">
+        <div className="bg-amber-950/40 border-b border-amber-800/60 px-4 py-1 text-xs font-mono text-amber-300 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <WifiOff className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.5} />
             <span>[OFFLINE MODE: Displaying cached benchmark dataset. Connect FastAPI on :8000 for live Tor crawl.]</span>
@@ -234,7 +308,17 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
       <div className="flex-1 flex overflow-hidden">
         {/* Primary View Workspace */}
         <main className="flex-1 p-3.5 sm:p-4 overflow-y-auto max-w-[1800px] w-full mx-auto">
-          {activeView === 'crawl' && (
+          {/* TAB 1: Case Dossier Overview */}
+          {activeTab === 'overview' && (
+            <CaseOverview
+              targetCase={selectedCase}
+              onNavigateTab={(tab) => setActiveTab(tab as Tab)}
+              onRunScan={() => handleRunScan(activeTarget)}
+            />
+          )}
+
+          {/* TAB 2: Investigation Runner & Autonomous Crawl */}
+          {activeTab === 'crawl' && (
             <ViewInvestigationCrawl
               activeTarget={activeTarget}
               setActiveTarget={setActiveTarget}
@@ -245,7 +329,8 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
             />
           )}
 
-          {activeView === 'graph' && (
+          {/* TAB 3: Cryptographic Entity Relationship Graph */}
+          {activeTab === 'graph' && (
             <ModuleEntityGraph
               selectedCase={selectedCase}
               graphData={currentGraphData}
@@ -254,29 +339,149 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
             />
           )}
 
-          {activeView === 'infra' && (
-            <ViewInfrastructureCorrelator
+          {/* TAB 4: Infrastructure Correlator (Audit Table + Deep SOCKS5 & AI Analysis) */}
+          {activeTab === 'infra' && (
+            <div className="space-y-4">
+              {/* Sub-Switch: Security Audit Table vs Deep SOCKS5 / AI Scan */}
+              <div className="flex items-center justify-between p-2 rounded bg-[#121215] border border-zinc-800 text-xs font-mono">
+                <div className="flex items-center gap-2">
+                  <Server className="w-4 h-4 text-zinc-400" strokeWidth={1.5} />
+                  <span className="text-zinc-300 font-semibold uppercase">Infrastructure Reconnaissance Suite</span>
+                </div>
+                <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded p-0.5">
+                  <button
+                    onClick={() => setInfraSubView('audit')}
+                    className={`px-3 py-1 rounded text-xs transition-colors flex items-center gap-1.5 ${
+                      infraSubView === 'audit'
+                        ? 'bg-zinc-800 text-zinc-100 font-medium'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    <Table className="w-3 h-3" />
+                    <span>Origin Leak Matrix</span>
+                  </button>
+                  <button
+                    onClick={() => setInfraSubView('deep_scan')}
+                    className={`px-3 py-1 rounded text-xs transition-colors flex items-center gap-1.5 ${
+                      infraSubView === 'deep_scan'
+                        ? 'bg-zinc-800 text-zinc-100 font-medium'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <span>Deep Scanner &amp; AI Audit</span>
+                  </button>
+                </div>
+              </div>
+
+              {infraSubView === 'audit' ? (
+                <ViewInfrastructureCorrelator
+                  selectedCase={selectedCase}
+                  scanResult={scanResults[selectedCase.id]}
+                  onRunScan={handleRunScan}
+                  isScanning={isScanning}
+                  onionTargets={onionTargets}
+                  onSelectEntity={handleEntitySelect}
+                />
+              ) : (
+                <ModuleInfraScan
+                  selectedCase={selectedCase}
+                  scanResult={scanResults[selectedCase.id]}
+                  onRunScan={handleRunScan}
+                  isScanning={isScanning}
+                  onionTargets={onionTargets}
+                />
+              )}
+            </div>
+          )}
+
+          {/* TAB 5: Stylometric Persona Profiler (Diff Matcher + Gemini AI Stylometry) */}
+          {activeTab === 'stylometry' && (
+            <div className="space-y-4">
+              {/* Sub-Switch: Side-by-Side Diff vs Gemini Forensic NLP Audit */}
+              <div className="flex items-center justify-between p-2 rounded bg-[#121215] border border-zinc-800 text-xs font-mono">
+                <div className="flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-zinc-400" strokeWidth={1.5} />
+                  <span className="text-zinc-300 font-semibold uppercase">Stylometric Author Attribution Suite</span>
+                </div>
+                <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded p-0.5">
+                  <button
+                    onClick={() => setStyloSubView('diff_matcher')}
+                    className={`px-3 py-1 rounded text-xs transition-colors flex items-center gap-1.5 ${
+                      styloSubView === 'diff_matcher'
+                        ? 'bg-zinc-800 text-zinc-100 font-medium'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    <Scale className="w-3 h-3" />
+                    <span>Rebrand Diff Matcher</span>
+                  </button>
+                  <button
+                    onClick={() => setStyloSubView('nlp_audit')}
+                    className={`px-3 py-1 rounded text-xs transition-colors flex items-center gap-1.5 ${
+                      styloSubView === 'nlp_audit'
+                        ? 'bg-zinc-800 text-zinc-100 font-medium'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <span>Gemini AI Persona Audit</span>
+                  </button>
+                </div>
+              </div>
+
+              {styloSubView === 'diff_matcher' ? (
+                <ViewStylometricMatcher
+                  selectedCase={selectedCase}
+                  onSelectEntity={handleEntitySelect}
+                />
+              ) : (
+                <ModuleStylometry
+                  selectedCase={selectedCase}
+                />
+              )}
+            </div>
+          )}
+
+          {/* TAB 6: Attribution Fusion Matrix (MCDA) */}
+          {activeTab === 'fusion' && (
+            <FusionLayer
               selectedCase={selectedCase}
-              scanResult={scanResults[selectedCase.id]}
-              onRunScan={handleRunScan}
-              isScanning={isScanning}
-              onionTargets={onionTargets}
-              onSelectEntity={handleEntitySelect}
+              signals={currentSignals}
+              onOpenExport={() => setExportModalOpen(true)}
+              onNavigateTab={(tab) => setActiveTab(tab as Tab)}
             />
           )}
 
-          {activeView === 'stylometry' && (
-            <ViewStylometricMatcher
-              selectedCase={selectedCase}
-              onSelectEntity={handleEntitySelect}
-            />
-          )}
-
-          {activeView === 'ledger' && (
+          {/* TAB 7: Evidence Provenance Ledger */}
+          {activeTab === 'ledger' && (
             <ViewEvidenceLedger
               selectedCase={selectedCase}
               onSelectEntity={handleEntitySelect}
-              onExportReport={handleExport}
+              onExportReport={() => setExportModalOpen(true)}
+            />
+          )}
+
+          {/* TAB 8: OpSec Timeline */}
+          {activeTab === 'timeline' && (
+            <InvestigationTimeline
+              selectedCase={selectedCase}
+              timelineEvents={currentTimeline}
+            />
+          )}
+
+          {/* TAB 9: Topology & Organization Network Setup */}
+          {activeTab === 'setup' && (
+            <SetupPage
+              testbedOnion={testbedOnion}
+              activeTarget={activeTarget}
+              activeMode={activeMode}
+              onionTargets={onionTargets}
+              onSetTarget={(url, mode) => {
+                setActiveTarget(url);
+                setActiveMode(mode);
+              }}
+              onOpenCrawlModal={() => setCrawlModalOpen(true)}
             />
           )}
         </main>
@@ -287,7 +492,7 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
           isOpen={isInspectorOpen}
           onClose={() => setIsInspectorOpen(false)}
           onFocusInGraph={(nodeId) => {
-            setActiveView('graph');
+            setActiveTab('graph');
           }}
         />
       </div>
@@ -308,7 +513,7 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
           <span className="text-zinc-700">|</span>
           <span>Integrity: <strong className="text-emerald-400">SHA-256 VERIFIED</strong></span>
           <span className="text-zinc-700">|</span>
-          <span>Keys: <kbd className="px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">1-5</kbd> Views, <kbd className="px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">⌘I</kbd> Inspector</span>
+          <span>Keys: <kbd className="px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">1-9</kbd> Modules, <kbd className="px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">⌘I</kbd> Inspector</span>
         </div>
       </footer>
 
@@ -317,9 +522,25 @@ Attribution: 93.8% Composite (Palantir Gotham MCDA Algorithm)`
         isOpen={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
         targetCase={selectedCase}
-        scan={scanResults[selectedCase.id]}
-        signals={MOCK_FUSION_SIGNALS[selectedCase.id] || MOCK_FUSION_SIGNALS['case-venom-01']}
+        scan={currentScan}
+        signals={currentSignals}
         graphData={currentGraphData}
+      />
+
+      {/* Custom Target Creation Modal */}
+      <NewTargetModal
+        isOpen={newTargetModalOpen}
+        onClose={() => setNewTargetModalOpen(false)}
+        onCreateTarget={handleCreateTarget}
+      />
+
+      {/* Autonomous Dark Web Crawl & Investigation Modal */}
+      <CrawlProgressModal
+        isOpen={crawlModalOpen}
+        onClose={() => setCrawlModalOpen(false)}
+        seedOnion={testbedOnion}
+        onionTargets={onionTargets}
+        onCrawlComplete={refreshAllData}
       />
     </div>
   );

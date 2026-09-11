@@ -15,15 +15,28 @@ import {
   PanelRightOpen,
   CheckCircle2,
   RefreshCw,
-  FolderTree
+  Plus,
+  Waypoints,
+  Layers,
+  Clock,
+  Settings2
 } from 'lucide-react';
 import { ThreatActorCase } from '../types';
 
-export type ActiveView = 'crawl' | 'graph' | 'infra' | 'stylometry' | 'ledger';
+export type Tab = 
+  | 'overview' 
+  | 'crawl' 
+  | 'graph' 
+  | 'infra' 
+  | 'stylometry' 
+  | 'fusion' 
+  | 'ledger' 
+  | 'timeline' 
+  | 'setup';
 
 interface HeaderProps {
-  activeView: ActiveView;
-  setActiveView: (v: ActiveView) => void;
+  activeTab: Tab;
+  setActiveTab: (v: Tab) => void;
   cases: ThreatActorCase[];
   selectedCase: ThreatActorCase;
   setSelectedCase: (c: ThreatActorCase) => void;
@@ -32,22 +45,27 @@ interface HeaderProps {
   edgeCount: number;
   isInspectorOpen: boolean;
   onToggleInspector: () => void;
-  onExportReport: (format: 'pdf' | 'stix' | 'csv') => void;
-  onTriggerCrawl: () => void;
+  onOpenExport: () => void;
+  onOpenNewTarget: () => void;
+  onOpenCrawlModal: () => void;
   isBackendConnected: boolean;
 }
 
-const navViews: Array<{ id: ActiveView; num: string; label: string; icon: React.ElementType }> = [
-  { id: 'crawl', num: '01', label: 'Investigation & Crawl', icon: Radio },
-  { id: 'graph', num: '02', label: 'Entity Relationship Graph', icon: Network },
-  { id: 'infra', num: '03', label: 'Infrastructure Correlator', icon: Server },
-  { id: 'stylometry', num: '04', label: 'Stylometric Persona Profiler', icon: Scale },
-  { id: 'ledger', num: '05', label: 'Evidence Provenance Ledger', icon: FileSpreadsheet },
+const navViews: Array<{ id: Tab; num: string; label: string; icon: React.ElementType }> = [
+  { id: 'overview', num: '01', label: 'Case Dossier', icon: Waypoints },
+  { id: 'crawl', num: '02', label: 'Investigation & Crawl', icon: Radio },
+  { id: 'graph', num: '03', label: 'Entity Relationship Graph', icon: Network },
+  { id: 'infra', num: '04', label: 'Infrastructure Correlator', icon: Server },
+  { id: 'stylometry', num: '05', label: 'Stylometric Profiler', icon: Scale },
+  { id: 'fusion', num: '06', label: 'Attribution Matrix', icon: Layers },
+  { id: 'ledger', num: '07', label: 'Evidence Ledger', icon: FileSpreadsheet },
+  { id: 'timeline', num: '08', label: 'OpSec Timeline', icon: Clock },
+  { id: 'setup', num: '09', label: 'Topology & Network', icon: Settings2 },
 ];
 
 export const Header: React.FC<HeaderProps> = ({
-  activeView,
-  setActiveView,
+  activeTab,
+  setActiveTab,
   cases,
   selectedCase,
   setSelectedCase,
@@ -56,21 +74,17 @@ export const Header: React.FC<HeaderProps> = ({
   edgeCount,
   isInspectorOpen,
   onToggleInspector,
-  onExportReport,
-  onTriggerCrawl,
+  onOpenExport,
+  onOpenNewTarget,
+  onOpenCrawlModal,
   isBackendConnected,
 }) => {
-  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [caseDropdownOpen, setCaseDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const caseDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setExportDropdownOpen(false);
-      }
       if (caseDropdownRef.current && !caseDropdownRef.current.contains(e.target as Node)) {
         setCaseDropdownOpen(false);
       }
@@ -104,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-zinc-500">Investigation</span>
           <span className="text-zinc-600">/</span>
 
-          {/* Interactive Target Selector */}
+          {/* Interactive Target Selector Dropdown */}
           <div className="relative" ref={caseDropdownRef}>
             <button
               onClick={() => setCaseDropdownOpen(!caseDropdownOpen)}
@@ -116,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {caseDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1 w-64 rounded-md bg-[#121215] border border-zinc-800 shadow-xl py-1 z-50 text-xs font-sans">
+              <div className="absolute left-0 top-full mt-1 w-68 rounded-md bg-[#121215] border border-zinc-800 shadow-xl py-1 z-50 text-xs font-sans">
                 <div className="px-2.5 py-1 text-[10px] font-mono text-zinc-500 uppercase tracking-wider border-b border-zinc-800">
                   Select Active Investigation Case
                 </div>
@@ -132,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     <div>
-                      <div className="font-mono text-xs">{c.codename}</div>
+                      <div className="font-mono text-xs font-medium">{c.codename}</div>
                       <div className="text-[11px] text-zinc-500 font-sans">{c.primaryHandle}</div>
                     </div>
                     <span className={`text-[10px] font-mono px-1 py-0.2 rounded border ${
@@ -154,74 +168,57 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* Right: System Heartbeat & Actions */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Right: Heartbeats + Actions (All Buttons Restored!) */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Tor SOCKS5 Proxy Status */}
           <div className="hidden lg:flex items-center gap-1.5 font-mono text-[11px] text-zinc-300 px-2 py-0.5 rounded-sm bg-zinc-900/80 border border-zinc-800">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="text-zinc-400">Tor SOCKS5:</span>
+            <span className="text-zinc-400">Tor:</span>
             <span className="text-zinc-200">127.0.0.1:9050</span>
           </div>
 
           {/* SQLite Store Stats */}
           <div className="hidden xl:flex items-center gap-1 font-mono text-[11px] text-zinc-400 px-2 py-0.5 rounded-sm bg-zinc-900/50 border border-zinc-800">
             <span className="text-zinc-500">Store:</span>
-            <span className="text-zinc-300">{nodeCount} nodes</span>
+            <span className="text-zinc-300">{nodeCount}n</span>
             <span className="text-zinc-600">/</span>
-            <span className="text-zinc-300">{edgeCount} edges</span>
+            <span className="text-zinc-300">{edgeCount}e</span>
           </div>
 
-          {/* Export Dossier Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs font-mono font-medium transition-colors"
-            >
-              <Download className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.5} />
-              <span>Export Dossier</span>
-              <ChevronDown className="w-3 h-3 text-zinc-400" />
-            </button>
+          {/* Action 1: Crawl Target Modal Button */}
+          <button
+            onClick={onOpenCrawlModal}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 text-xs font-mono transition-colors"
+            title="Launch autonomous darknet crawler"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.5} />
+            <span className="hidden sm:inline">Crawl Target</span>
+          </button>
 
-            {exportDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-44 rounded-md bg-[#121215] border border-zinc-800 shadow-xl py-1 z-50 text-xs">
-                <button
-                  onClick={() => {
-                    onExportReport('pdf');
-                    setExportDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-zinc-800/70 text-zinc-200 transition-colors"
-                >
-                  <FileText className="w-3.5 h-3.5 text-rose-400" strokeWidth={1.5} />
-                  <span>PDF Forensic Report</span>
-                </button>
-                <button
-                  onClick={() => {
-                    onExportReport('stix');
-                    setExportDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-zinc-800/70 text-zinc-200 transition-colors"
-                >
-                  <Code2 className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.5} />
-                  <span>STIX 2.1 Bundle (JSON)</span>
-                </button>
-                <button
-                  onClick={() => {
-                    onExportReport('csv');
-                    setExportDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-zinc-800/70 text-zinc-200 transition-colors"
-                >
-                  <Table className="w-3.5 h-3.5 text-blue-400" strokeWidth={1.5} />
-                  <span>Evidence Ledger (CSV)</span>
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Action 2: New Target Modal Button */}
+          <button
+            onClick={onOpenNewTarget}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 text-xs font-mono transition-colors"
+            title="Create a new target investigation case"
+          >
+            <Plus className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.5} />
+            <span className="hidden sm:inline">New Target</span>
+          </button>
 
-          {/* Toggle Inspector Drawer */}
+          {/* Action 3: Export Dossier Modal Button */}
+          <button
+            onClick={onOpenExport}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-mono font-medium transition-colors"
+            title="Export forensic intelligence dossier"
+          >
+            <Download className="w-3.5 h-3.5 text-zinc-300" strokeWidth={1.5} />
+            <span>Export Dossier</span>
+          </button>
+
+          {/* Action 4: Toggle Inspector Drawer Button */}
           <button
             onClick={onToggleInspector}
             className={`p-1.5 rounded-sm border transition-colors ${
@@ -240,18 +237,18 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* 2. PRIMARY VIEW CONTROLLER: Seamless Sub-Navigation Header */}
+      {/* 2. PRIMARY VIEW CONTROLLER: Seamless Sub-Navigation Header with All 9 Modules */}
       <nav 
         className="h-9 px-3 sm:px-4 border-b border-zinc-800/80 bg-[#0d0d10] flex items-center gap-1 overflow-x-auto"
-        aria-label="Investigation Sub-Views"
+        aria-label="Investigation Modules"
       >
         {navViews.map(({ id, num, label, icon: Icon }) => {
-          const isActive = activeView === id;
+          const isActive = activeTab === id;
           return (
             <button
               key={id}
-              onClick={() => setActiveView(id)}
-              className={`flex items-center gap-2 px-2.5 py-1 rounded-sm text-xs font-mono transition-colors whitespace-nowrap ${
+              onClick={() => setActiveTab(id)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono transition-colors whitespace-nowrap ${
                 isActive
                   ? 'bg-zinc-800/90 text-zinc-100 font-medium border border-zinc-700/80 shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border border-transparent'
