@@ -52,7 +52,7 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
   };
 
   const handleDownload = () => {
-    const filenameBase = `OBSIDIAN_${targetCase.codename}_${targetCase.caseNumber.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const filenameBase = `CHARON_${targetCase.codename}_${targetCase.caseNumber.replace(/[^a-zA-Z0-9]/g, '_')}`;
     if (activeFormat === 'report') {
       downloadFile(reportText, `${filenameBase}_EVIDENTIARY_DOSSIER.txt`, 'text/plain');
     } else if (activeFormat === 'stix') {
@@ -63,44 +63,44 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070a]/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="surface-card rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-[#1a2436]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08090d]/85 backdrop-blur-sm p-4">
+      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
-        <div className="p-4 border-b border-[#161e30] flex items-center justify-between bg-[#070a10]">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+        <div className="p-4 border-b border-[#1e2433] flex items-center justify-between bg-[#08090d]">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/25">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-white font-mono flex items-center gap-2">
-                <span>Evidentiary Dossier &amp; Intelligence Export Center</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-800/80 font-bold">
+                <span>Evidentiary Dossier &amp; Export Center</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1a1a1f] text-gray-300 border border-[#1e1e24]">
                   {targetCase.caseNumber}
                 </span>
               </h3>
-              <p className="text-xs text-slate-400 font-mono">
-                Court-admissible law enforcement intelligence export for NTRO / Cybercrime Prosecution
+              <p className="text-xs text-gray-400 font-mono">
+                Admissible law enforcement intelligence export for NTRO / Cybercrime Unit
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md bg-[#0e1422] hover:bg-[#161e30] text-slate-400 hover:text-white transition border border-[#1e273a]"
+            className="p-1.5 rounded-lg bg-[#1a1a1f] hover:bg-[#25252d] text-gray-400 hover:text-white transition border border-[#1e1e24]"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Format Selectors */}
-        <div className="px-4 py-2.5 bg-[#090d14] border-b border-[#161e30] flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
+        <div className="px-4 py-2 bg-[#0e0e11] border-b border-[#1e1e24] flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveFormat('report')}
-              className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition ${
                 activeFormat === 'report'
-                  ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/50 font-bold shadow-sm glow-cyan'
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                  ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-800/60 font-bold shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+                  : 'text-gray-400 hover:text-gray-200'
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -109,10 +109,10 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
 
             <button
               onClick={() => setActiveFormat('stix')}
-              className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition ${
                 activeFormat === 'stix'
-                  ? 'bg-violet-950/70 text-violet-300 border border-violet-500/50 font-bold shadow-sm glow-violet'
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                  ? 'bg-purple-950/60 text-purple-300 border border-purple-800/60 font-bold shadow-[0_0_8px_rgba(168,85,247,0.2)]'
+                  : 'text-gray-400 hover:text-gray-200'
               }`}
             >
               <FileCode className="w-3.5 h-3.5" />
@@ -121,10 +121,10 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
 
             <button
               onClick={() => setActiveFormat('csv')}
-              className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition ${
                 activeFormat === 'csv'
-                  ? 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/50 font-bold shadow-sm glow-emerald'
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                  ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 font-bold shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                  : 'text-gray-400 hover:text-gray-200'
               }`}
             >
               <Table className="w-3.5 h-3.5" />
@@ -135,7 +135,7 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
-              className="px-3 py-1.5 rounded-md bg-[#070a10] hover:bg-[#0e1422] text-slate-200 transition-all flex items-center gap-1.5 border border-[#161e30] active:scale-95"
+              className="px-3 py-1.5 rounded bg-[#1a1a1f] hover:bg-[#25252d] text-gray-200 transition flex items-center gap-1.5 border border-[#1e1e24]"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -143,7 +143,7 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
 
             <button
               onClick={handleDownload}
-              className="px-3.5 py-1.5 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95 glow-cyan"
+              className="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs transition-all flex items-center gap-1.5 shadow-sm"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download File</span>
@@ -152,16 +152,16 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
         </div>
 
         {/* Content Preview Canvas */}
-        <div className="flex-1 p-4 bg-[#05070a] overflow-y-auto font-mono text-xs text-slate-300 scrollbar-thin">
+        <div className="flex-1 p-4 bg-[#0a0a0c] overflow-y-auto font-mono text-xs text-zinc-300 scrollbar-thin">
           <pre className="whitespace-pre-wrap leading-relaxed select-all">
             {getCurrentContent()}
           </pre>
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 bg-[#070a10] border-t border-[#161e30] flex items-center justify-between text-[10px] font-mono text-slate-500">
-          <span className="text-emerald-400 font-semibold">Digital Signature: SHA-256 e3b0c44298fc1c149... Verified</span>
-          <span>OBSIDIAN ATTRIBUTION ENGINE v2.5</span>
+        <div className="p-3 bg-[#0e0e11] border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-500">
+          <span>Digital Signature: SHA-256 e3b0c44298fc1c149... verified</span>
+          <span>Obsidian Attribution Engine v2.4</span>
         </div>
       </div>
     </div>

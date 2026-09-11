@@ -42,13 +42,14 @@ export const CrawlProgressModal: React.FC<CrawlProgressModalProps> = ({
     setIsRunning(true);
     setIsDone(false);
     setLogs([
-      `[INIT] Initializing autonomous multi-signal crawler across Tor testbed...`,
+      `[INIT] Initializing autonomous multi-signal crawler across Tor network...`,
       `[SOCKS5] Connecting to local Tor SOCKS proxy at 127.0.0.1:9050...`,
       `[DISCOVERY] Mapping 7 hidden services (Aster Market, Boreal, Cinder, Lantern, Harbor, CryptaVault)...`,
       `[TARGET] Seed host: ${selectedTarget || seedOnion}`,
     ]);
 
     try {
+      // Simulate stepped progress messages for instant feedback while backend executes
       const step1Timer = setTimeout(() => {
         setLogs(prev => [
           ...prev,
@@ -99,70 +100,70 @@ export const CrawlProgressModal: React.FC<CrawlProgressModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070a]/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="surface-card rounded-lg max-w-2xl w-full p-5 shadow-2xl relative border border-[#1a2436]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08090d]/85 backdrop-blur-sm p-4">
+      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg max-w-2xl w-full p-5 shadow-2xl relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors p-1"
+          className="absolute top-4 right-4 text-zinc-500 hover:text-white transition p-1"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+          <div className="p-2 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/25">
             <Network className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-0.5">
-              <span className="font-mono text-[9px] font-bold px-1.5 py-0.2 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-800/80 uppercase tracking-wider">
+              <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 uppercase">
                 CRAWLER PIPELINE // TOR TESTBED
               </span>
             </div>
             <h3 className="text-sm font-bold text-white font-mono">Autonomous Dark Web Multi-Signal Crawler</h3>
-            <p className="text-xs text-slate-400 font-mono">
+            <p className="text-xs text-zinc-400">
               Scans multi-onion testbed services, extracts cryptographic identifiers, and builds the identity graph.
             </p>
           </div>
         </div>
 
         {/* Target Selector */}
-        <div className="bg-[#070a10] border border-[#161e30] rounded-md p-3 mb-4">
-          <label className="font-mono text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+        <div className="bg-[#08090d] border border-[#1e2433] rounded p-3 mb-4">
+          <label className="font-mono text-[10px] font-bold uppercase text-zinc-400 block mb-1">
             SEED TOR HIDDEN SERVICE TARGET:
           </label>
           <select
             value={selectedTarget}
             onChange={(e) => setSelectedTarget(e.target.value)}
             disabled={isRunning}
-            className="w-full bg-[#05070a] border border-[#161e30] rounded px-3 py-1.5 text-xs text-cyan-300 outline-none focus:border-cyan-500 font-mono cursor-pointer"
+            className="w-full bg-[#0d1117] border border-[#1e2433] rounded px-3 py-1.5 text-xs text-cyan-300 outline-none focus:border-cyan-500 font-mono"
           >
             {Object.entries(onionTargets).map(([svc, onion]) => (
-              <option key={svc} value={onion} className="bg-[#070a10] text-slate-200">
+              <option key={svc} value={onion}>
                 {svc.toUpperCase()} ({onion})
               </option>
             ))}
             {Object.keys(onionTargets).length === 0 && (
-              <option value={seedOnion} className="bg-[#070a10] text-slate-200">{seedOnion || 'Default Testbed Target'}</option>
+              <option value={seedOnion}>{seedOnion || 'Default Testbed Target'}</option>
             )}
           </select>
         </div>
 
         {/* Live Terminal / Log View */}
-        <div className="bg-[#05070a] border border-[#161e30] rounded-md p-3.5 mb-4 font-mono text-[10.5px] h-48 overflow-y-auto space-y-1.5 text-slate-300 scrollbar-thin">
-          <div className="text-slate-500 flex items-center justify-between mb-2 pb-1.5 border-b border-[#161e30] text-[9px]">
+        <div className="bg-[#08090d] border border-[#1e2433] rounded p-3.5 mb-4 font-mono text-[11px] h-48 overflow-y-auto space-y-1.5 text-zinc-300 scrollbar-thin">
+          <div className="text-zinc-500 flex items-center justify-between mb-2 pb-1.5 border-b border-[#1e2433] text-[10px]">
             <div className="flex items-center gap-1.5">
               <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="font-bold text-slate-300">INVESTIGATION PIPELINE LOG</span>
+              <span className="font-bold text-zinc-300">INVESTIGATION PIPELINE LOG</span>
             </div>
-            <span className="text-cyan-400 font-bold">SOCKS5 :9050 ACTIVE</span>
+            <span className="text-cyan-400">SOCKS5 :9050</span>
           </div>
           {logs.length === 0 ? (
-            <p className="text-slate-600 italic">
+            <p className="text-zinc-600 italic">
               Click &quot;Start Autonomous Crawl&quot; to begin scanning and crawling the 7 live Tor hidden services.
             </p>
           ) : (
             logs.map((line, idx) => (
-              <div key={idx} className={line.includes('[SUCCESS]') ? 'text-emerald-400 font-semibold' : line.includes('[ERROR]') ? 'text-rose-400 font-semibold' : line.includes('[DATA]') || line.includes('[TARGET]') ? 'text-cyan-300' : 'text-slate-300'}>
+              <div key={idx} className={line.includes('[SUCCESS]') ? 'text-emerald-400' : line.includes('[ERROR]') ? 'text-rose-400' : line.includes('[DATA]') ? 'text-cyan-400' : 'text-zinc-300'}>
                 {line}
               </div>
             ))
@@ -172,17 +173,17 @@ export const CrawlProgressModal: React.FC<CrawlProgressModalProps> = ({
         {/* Stats Strip */}
         {isDone && (
           <div className="grid grid-cols-3 gap-3 mb-4 font-mono">
-            <div className="bg-[#070a10] border border-[#161e30] rounded-md p-3 text-center">
-              <div className="text-[9px] text-slate-500 uppercase font-semibold">HOSTS SCANNED</div>
+            <div className="bg-[#08090d] border border-[#1e2433] rounded p-3 text-center">
+              <div className="text-[10px] text-zinc-500 uppercase">HOSTS SCANNED</div>
               <div className="text-lg font-bold text-cyan-400 mt-0.5">{stats.hostsScanned || 7}</div>
             </div>
-            <div className="bg-[#070a10] border border-[#161e30] rounded-md p-3 text-center">
-              <div className="text-[9px] text-slate-500 uppercase font-semibold">PAGES PROCESSED</div>
+            <div className="bg-[#08090d] border border-[#1e2433] rounded p-3 text-center">
+              <div className="text-[10px] text-zinc-500 uppercase">PAGES PROCESSED</div>
               <div className="text-lg font-bold text-emerald-400 mt-0.5">{stats.pagesProcessed || 150}</div>
             </div>
-            <div className="bg-[#070a10] border border-[#161e30] rounded-md p-3 text-center">
-              <div className="text-[9px] text-slate-500 uppercase font-semibold">LISTINGS STORED</div>
-              <div className="text-lg font-bold text-violet-400 mt-0.5">{stats.listingsExtracted || 235}</div>
+            <div className="bg-[#08090d] border border-[#1e2433] rounded p-3 text-center">
+              <div className="text-[10px] text-zinc-500 uppercase">LISTINGS STORED</div>
+              <div className="text-lg font-bold text-purple-400 mt-0.5">{stats.listingsExtracted || 235}</div>
             </div>
           </div>
         )}
@@ -191,7 +192,7 @@ export const CrawlProgressModal: React.FC<CrawlProgressModalProps> = ({
         <div className="flex items-center justify-end gap-2.5 pt-2">
           <button
             onClick={onClose}
-            className="px-3.5 py-1.5 rounded-md text-xs font-mono text-slate-400 hover:text-white transition-colors"
+            className="px-3.5 py-1.5 rounded text-xs font-mono text-zinc-400 hover:text-white transition-colors"
           >
             {isDone ? 'CLOSE' : 'CANCEL'}
           </button>
@@ -199,7 +200,7 @@ export const CrawlProgressModal: React.FC<CrawlProgressModalProps> = ({
             <button
               onClick={handleStartCrawl}
               disabled={isRunning}
-              className="px-4 py-2 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-mono font-bold tracking-wider flex items-center gap-2 transition-all disabled:bg-[#161e30] disabled:text-slate-600 shadow-sm border border-cyan-400/30 active:scale-95 glow-cyan"
+              className="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-mono font-bold tracking-wider flex items-center gap-2 transition-colors disabled:bg-[#1e2433] disabled:text-zinc-600 shadow-sm border border-cyan-400/30"
             >
               {isRunning ? (
                 <>
@@ -216,7 +217,7 @@ export const CrawlProgressModal: React.FC<CrawlProgressModalProps> = ({
           ) : (
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold tracking-wider flex items-center gap-1.5 transition-all border border-emerald-400/30 shadow-sm active:scale-95 glow-emerald"
+              className="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold tracking-wider flex items-center gap-1.5 transition-colors border border-emerald-400/30"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>INGEST CORRELATED INTELLIGENCE</span>

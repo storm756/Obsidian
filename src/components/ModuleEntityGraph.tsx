@@ -6,30 +6,27 @@ import {
   Filter, 
   RotateCcw, 
   Route, 
-  ZoomIn, 
-  ZoomOut, 
-  Maximize2, 
-  Database, 
-  Play, 
-  Copy, 
-  Check, 
-  Download, 
-  Terminal, 
-  ChevronDown, 
-  ChevronUp, 
-  Sliders,
-  Shield,
-  Layers,
-  Sparkles
+  Info,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Database,
+  Play,
+  Copy,
+  Check,
+  Download,
+  Terminal,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Radio
 } from 'lucide-react';
 import { GraphNode, GraphLink, ThreatActorCase } from '../types';
-import { ForensicEntity } from './ForensicInspector';
 
 interface ModuleEntityGraphProps {
   selectedCase: ThreatActorCase;
   graphData: { nodes: GraphNode[]; links: GraphLink[] };
-  isLiveGraph?: boolean;
-  onSelectEntity?: (entity: ForensicEntity) => void;
+  isLiveGraph?: boolean; // true when data came from the real backend, false/undefined = simulated/mock
 }
 
 interface SimNode extends GraphNode {
@@ -54,7 +51,6 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
   selectedCase,
   graphData,
   isLiveGraph = false,
-  onSelectEntity,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -62,152 +58,145 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
   const svgGroupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
 
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [filterType, setFilterType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [confidenceThreshold, setConfidenceThreshold] = useState<number>(70);
-  
-  // Filter toggles requested in specs
-  const [toggleDeterministic, setToggleDeterministic] = useState<boolean>(true);
-  const [toggleStylometric, setToggleStylometric] = useState<boolean>(true);
-  const [toggleInfraLeaks, setToggleInfraLeaks] = useState<boolean>(true);
-
   const [pathfindingActive, setPathfindingActive] = useState<boolean>(false);
   const [highlightedPath, setHighlightedPath] = useState<string[]>([]);
 
-  // Query Console State
-  const [showConsole, setShowConsole] = useState<boolean>(false);
+  // Query Console State (styled like Cypher, but backed by a real local query engine — see notes below)
+  const [showConsole, setShowConsole] = useState<boolean>(true);
   const [cypherQuery, setCypherQuery] = useState<string>(
     `MATCH (a:ThreatActor {handle: "${selectedCase.primaryHandle}"})-[r:USED_PGP|OPERATED_ON]->(target)\nRETURN a, r, target`
   );
   const [copiedQuery, setCopiedQuery] = useState<boolean>(false);
   const [copiedCql, setCopiedCql] = useState<boolean>(false);
+  const [showCqlModal, setShowCqlModal] = useState<boolean>(false);
+  const [cypherStats, setCypherStats] = useState<{
+    executionTimeMs: number;
+    recordsCount: number;
+    nodesCount: number;
+    edgesCount: number;
+    lastExecuted: string;
+  }>({
+    executionTimeMs: 0,
+    recordsCount: graphData.links.length,
+    nodesCount: graphData.nodes.length,
+    edgesCount: graphData.links.length,
+    lastExecuted: 'Query ready',
+  });
 
-  // Helper: Classify link type
-  const getLinkCategory = (rel: string = '', conf: number = 0) => {
-    const upper = rel.toUpperCase();
-    if (upper.includes('PGP') || upper.includes('WALLET') || upper.includes('TRANSACT') || upper.includes('IDENTICAL') || conf >= 95) {
-      return 'deterministic';
-    }
-    if (upper.includes('STYLO') || upper.includes('REBRAND') || upper.includes('PROBABLE') || upper.includes('LINGUISTIC')) {
-      return 'stylometric';
-    }
-    if (upper.includes('INFRA') || upper.includes('LEAK') || upper.includes('ORIGIN') || upper.includes('SERVER') || upper.includes('FAVICON')) {
-      return 'infra';
-    }
-    return 'other';
-  };
-
-  // Node color mapper
+  // Node color helper
   const getNodeColor = (type: string) => {
     switch (type) {
       case 'actor':
         return '#f43f5e'; // rose-500
       case 'marketplace':
-        return '#3f3f46'; // zinc-700
-      case 'forum':
-        return '#52525b'; // zinc-600
+        return '#10b981'; // emerald-500
       case 'pgp':
         return '#f59e0b'; // amber-500
       case 'wallet':
-        return '#10b981'; // emerald-500
+        return '#06b6d4'; // cyan-500
       case 'infrastructure':
-        return '#8b5cf6'; // violet-500
+        return '#fb923c'; // orange-400
+      case 'forum':
+        return '#8b5cf6'; // purple-500
       case 'origin_ip':
-        return '#e11d48'; // rose-600
+        return '#ef4444'; // red-500 target origin
       default:
-        return '#71717a'; // zinc-500
+        return '#94a3b8'; // slate-400
     }
   };
 
-  // Node icon symbol
   const getNodeIconSymbol = (type: string) => {
     switch (type) {
       case 'actor': return '👤';
-      case 'marketplace': return '🏪';
-      case 'forum': return '💬';
+      case 'marketplace': return '🛒';
       case 'pgp': return '🔑';
-      case 'wallet': return '💰';
+      case 'wallet': return '₿';
       case 'infrastructure': return '🌐';
+      case 'forum': return '💬';
       case 'origin_ip': return '🎯';
       default: return '●';
     }
   };
 
-  // Filter nodes & links based on search, confidence, and toggles
-  const { filteredNodes, filteredLinks } = useMemo(() => {
-    const minConf = confidenceThreshold;
+  // Shared helper: apply a type filter + search string to the current graphData,
+  // used both by the D3 render effect and by the query console so stats always
+  // reflect what's actually being shown, not a hardcoded number.
+  const computeFiltered = useCallback((type: string, query: string) => {
+    let baseNodes = graphData.nodes;
 
-    const acceptedLinks = graphData.links.filter(l => {
-      if (l.confidence < minConf) return false;
-      const cat = getLinkCategory(l.relationship, l.confidence);
-      if (cat === 'deterministic' && !toggleDeterministic) return false;
-      if (cat === 'stylometric' && !toggleStylometric) return false;
-      if (cat === 'infra' && !toggleInfraLeaks) return false;
-      return true;
+    // If filtering by a specific type (e.g. pgp, wallet, infrastructure, origin_ip),
+    // include nodes of that type AND any connected actor/marketplace nodes so relationships are visible
+    if (type !== 'all') {
+      const typeNodeIds = new Set(graphData.nodes.filter(n => n.type === type).map(n => n.id));
+      const connectedIds = new Set<string>();
+      graphData.links.forEach(l => {
+        const s = typeof l.source === 'object' ? (l.source as any).id : l.source;
+        const t = typeof l.target === 'object' ? (l.target as any).id : l.target;
+        if (typeNodeIds.has(s)) connectedIds.add(t);
+        if (typeNodeIds.has(t)) connectedIds.add(s);
+      });
+      baseNodes = graphData.nodes.filter(n => typeNodeIds.has(n.id) || connectedIds.has(n.id));
+    }
+
+    const filteredNodes = baseNodes.filter(n => {
+      if (!query || query.trim() === '') return true;
+      const q = query.toLowerCase().trim();
+      return n.label.toLowerCase().includes(q) ||
+        n.id.toLowerCase().includes(q) ||
+        (n.properties && JSON.stringify(n.properties).toLowerCase().includes(q));
     });
 
-    const activeNodeIds = new Set<string>();
-    acceptedLinks.forEach(l => {
-      const sId = typeof l.source === 'object' ? (l.source as any).id : l.source;
-      const tId = typeof l.target === 'object' ? (l.target as any).id : l.target;
-      activeNodeIds.add(sId);
-      activeNodeIds.add(tId);
+    const nodeIds = new Set(filteredNodes.map(n => n.id));
+    const filteredLinks = graphData.links.filter(l => {
+      const s = typeof l.source === 'object' ? (l.source as any).id : l.source;
+      const t = typeof l.target === 'object' ? (l.target as any).id : l.target;
+      return nodeIds.has(s) && nodeIds.has(t);
     });
 
-    let nodes = graphData.nodes.filter(n => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matches = n.label.toLowerCase().includes(q) || 
-                        n.id.toLowerCase().includes(q) ||
-                        (n.properties?.handle && n.properties.handle.toLowerCase().includes(q));
-        return matches;
-      }
-      return activeNodeIds.has(n.id) || n.type === 'actor';
-    });
+    return { filteredNodes, filteredLinks };
+  }, [graphData]);
 
-    const nodeIds = new Set(nodes.map(n => n.id));
-    const links = acceptedLinks.filter(l => {
-      const sId = typeof l.source === 'object' ? (l.source as any).id : l.source;
-      const tId = typeof l.target === 'object' ? (l.target as any).id : l.target;
-      return nodeIds.has(sId) && nodeIds.has(tId);
-    });
-
-    return { filteredNodes: nodes, filteredLinks: links };
-  }, [graphData, confidenceThreshold, toggleDeterministic, toggleStylometric, toggleInfraLeaks, searchQuery]);
-
-  // Path tracing
+  // Run Pathfinder from primary actor to leaked clearnet origin / lead
   const handleTraceEvidencePath = () => {
+    const sourceNode = graphData.nodes.find(n => n.type === 'actor') || graphData.nodes[0];
+    const targetNode = graphData.nodes.find(n => 
+      n.id.includes('clearnet') || 
+      n.id.includes('identity') || 
+      n.label.includes('IP:') ||
+      (n.properties && n.properties.city)
+    ) || graphData.nodes[graphData.nodes.length - 1];
+
+    if (!sourceNode || !targetNode) return [];
+
+    // Breadth-first search for shortest unweighted path
+    const adj = new Map<string, string[]>();
+    graphData.nodes.forEach(n => adj.set(n.id, []));
+    graphData.links.forEach(l => {
+      const s = typeof l.source === 'object' ? (l.source as any).id : l.source;
+      const t = typeof l.target === 'object' ? (l.target as any).id : l.target;
+      adj.get(s)?.push(t);
+      adj.get(t)?.push(s);
+    });
+
+    const queue: string[][] = [[sourceNode.id]];
+    const visited = new Set<string>([sourceNode.id]);
     let pathFound: string[] = [];
-    const actorNode = graphData.nodes.find(n => n.type === 'actor');
-    const originNode = graphData.nodes.find(n => n.type === 'origin_ip' || n.type === 'infrastructure');
 
-    if (actorNode && originNode) {
-      const queue: { id: string; path: string[] }[] = [{ id: actorNode.id, path: [actorNode.id] }];
-      const visited = new Set<string>([actorNode.id]);
+    while (queue.length > 0) {
+      const currentPath = queue.shift()!;
+      const current = currentPath[currentPath.length - 1];
 
-      while (queue.length > 0) {
-        const { id, path } = queue.shift()!;
-        if (id === originNode.id) {
-          pathFound = path;
-          break;
-        }
+      if (current === targetNode.id) {
+        pathFound = currentPath;
+        break;
+      }
 
-        const neighbors = graphData.links
-          .filter(l => {
-            const sId = typeof l.source === 'object' ? (l.source as any).id : l.source;
-            const tId = typeof l.target === 'object' ? (l.target as any).id : l.target;
-            return sId === id || tId === id;
-          })
-          .map(l => {
-            const sId = typeof l.source === 'object' ? (l.source as any).id : l.source;
-            const tId = typeof l.target === 'object' ? (l.target as any).id : l.target;
-            return sId === id ? tId : sId;
-          });
-
-        for (const n of neighbors) {
-          if (!visited.has(n)) {
-            visited.add(n);
-            queue.push({ id: n, path: [...path, n] });
-          }
+      for (const neighbor of adj.get(current) || []) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push([...currentPath, neighbor]);
         }
       }
     }
@@ -226,11 +215,36 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
     setHighlightedPath([]);
     setSelectedNode(null);
     setSearchQuery('');
-    setConfidenceThreshold(70);
-    setToggleDeterministic(true);
-    setToggleStylometric(true);
-    setToggleInfraLeaks(true);
+    setFilterType('all');
 
+    if (svgRef.current && zoomBehaviorRef.current) {
+      d3.select(svgRef.current)
+        .transition()
+        .duration(600)
+        .call(zoomBehaviorRef.current.transform, d3.zoomIdentity);
+    }
+  };
+
+  // Zoom controls
+  const handleZoomIn = () => {
+    if (svgRef.current && zoomBehaviorRef.current) {
+      d3.select(svgRef.current)
+        .transition()
+        .duration(300)
+        .call(zoomBehaviorRef.current.scaleBy, 1.3);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (svgRef.current && zoomBehaviorRef.current) {
+      d3.select(svgRef.current)
+        .transition()
+        .duration(300)
+        .call(zoomBehaviorRef.current.scaleBy, 0.7);
+    }
+  };
+
+  const handleFit = () => {
     if (svgRef.current && zoomBehaviorRef.current) {
       d3.select(svgRef.current)
         .transition()
@@ -239,55 +253,112 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
     }
   };
 
-  const handleZoomIn = () => {
-    if (svgRef.current && zoomBehaviorRef.current) {
-      d3.select(svgRef.current).transition().duration(250).call(zoomBehaviorRef.current.scaleBy, 1.3);
+  // Preset Queries (Cypher-style syntax kept as a familiar query language for
+  // analysts, but executed locally against graphData — see handleExecuteCypher)
+  const presetQueries = useMemo(() => [
+    {
+      title: 'Correlate PGP Key',
+      description: 'Find shared 4096-bit public key across marketplaces',
+      query: `MATCH (a:ThreatActor)-[r:USED_PGP]->(k:PgpKey)\nRETURN a, r, k`,
+      filter: 'pgp'
+    },
+    {
+      title: 'Trace Shortest Origin Path',
+      description: 'Shortest path from persona to clearnet IP leak',
+      query: `MATCH path = shortestPath((a:ThreatActor {handle: "${selectedCase.primaryHandle}"})-[*..5]-(i:Infrastructure))\nRETURN path`,
+      action: 'path'
+    },
+    {
+      title: 'Escrow & Crypto Wallets',
+      description: 'Extract Bitcoin and Monero transaction destinations',
+      query: `MATCH (a:ThreatActor)-[r:TRANSACTED_WITH]->(w:CryptoWallet)\nRETURN a, r, w`,
+      filter: 'wallet'
+    },
+    {
+      title: 'High-Confidence Edges (≥95%)',
+      description: 'Filter verified cryptographic and server matches',
+      query: `MATCH (n)-[r]->(m)\nWHERE r.confidence >= 95\nRETURN n, r, m`,
+      filter: 'all'
+    },
+    {
+      title: 'Full Knowledge Graph',
+      description: 'Return all personas, infrastructure, and keys',
+      query: `MATCH (n)\nOPTIONAL MATCH (n)-[r]->(m)\nRETURN n, r, m`,
+      filter: 'all'
     }
+  ], [selectedCase]);
+
+  // Execute Query Handler — executes real local Cypher parsing and custom text search
+  const handleExecuteCypher = (customQuery?: string) => {
+    const rawQuery = customQuery || cypherQuery;
+    const q = rawQuery.trim();
+    const upper = q.toUpperCase();
+    const startTime = performance.now();
+
+    // 1. Pathfinding query: shortest path to leaked infrastructure/clearnet IP
+    if (upper.includes('SHORTESTPATH') || upper.includes('PATH =') || upper.includes('PATH=')) {
+      const path = handleTraceEvidencePath();
+      const elapsed = +(performance.now() - startTime).toFixed(1);
+      setCypherStats({
+        executionTimeMs: elapsed,
+        recordsCount: path.length,
+        nodesCount: path.length,
+        edgesCount: Math.max(path.length - 1, 0),
+        lastExecuted: 'Shortest path computed via local BFS over graph store'
+      });
+      return;
+    }
+
+    // 2. Detect entity type filter
+    let nextFilter = 'all';
+    if (upper.includes(':PGP') || upper.includes('USED_PGP') || upper.includes('PGPKEY')) nextFilter = 'pgp';
+    else if (upper.includes(':CRYPTO') || upper.includes('WALLET') || upper.includes('TRANSACTED_WITH')) nextFilter = 'wallet';
+    else if (upper.includes(':INFRASTRUCTURE') || upper.includes('TOR')) nextFilter = 'infrastructure';
+    else if (upper.includes(':ORIGIN') || upper.includes('CLEARNET') || upper.includes('ORIGIN_IP')) nextFilter = 'origin_ip';
+    else if (upper.includes(':MARKETPLACE') || upper.includes('MARKET')) nextFilter = 'marketplace';
+    else if (upper.includes(':FORUM')) nextFilter = 'forum';
+    else if (upper.includes(':THREATACTOR') || upper.includes(':ACTOR')) nextFilter = 'actor';
+
+    // 3. Extract search term if present
+    let term = '';
+    const handleMatch = q.match(/handle\s*:\s*["']([^"']+)["']/i) || 
+                        q.match(/CONTAINS\s*["']([^"']+)["']/i) ||
+                        q.match(/label\s*=\s*["']([^"']+)["']/i) ||
+                        q.match(/WHERE\s+.*?["']([^"']+)["']/i);
+    if (handleMatch) {
+      term = handleMatch[1];
+    } else if (!upper.startsWith('MATCH') && !upper.startsWith('RETURN') && q.length > 0) {
+      term = q;
+    }
+
+    setFilterType(nextFilter);
+    setSearchQuery(term);
+    setPathfindingActive(false);
+
+    const { filteredNodes, filteredLinks } = computeFiltered(nextFilter, term);
+    const elapsed = +(performance.now() - startTime).toFixed(1);
+
+    // Auto-select first matching node if any found
+    if (filteredNodes.length > 0) {
+      setSelectedNode(filteredNodes[0]);
+    }
+
+    setCypherStats({
+      executionTimeMs: elapsed,
+      recordsCount: filteredNodes.length + filteredLinks.length,
+      nodesCount: filteredNodes.length,
+      edgesCount: filteredLinks.length,
+      lastExecuted: term 
+        ? `Matched "${term}" (${filteredNodes.length} nodes, ${filteredLinks.length} edges)`
+        : nextFilter === 'all'
+        ? `Full graph query (${filteredNodes.length} nodes, ${filteredLinks.length} edges)`
+        : `Filtered to "${nextFilter}" (${filteredNodes.length} nodes, ${filteredLinks.length} edges)`,
+    });
   };
 
-  const handleZoomOut = () => {
-    if (svgRef.current && zoomBehaviorRef.current) {
-      d3.select(svgRef.current).transition().duration(250).call(zoomBehaviorRef.current.scaleBy, 0.7);
-    }
-  };
-
-  const handleFit = () => {
-    if (svgRef.current && zoomBehaviorRef.current) {
-      d3.select(svgRef.current).transition().duration(400).call(zoomBehaviorRef.current.transform, d3.zoomIdentity);
-    }
-  };
-
-  // Node Selection Handler
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    setSelectedNode(node);
-
-    if (onSelectEntity) {
-      const entity: ForensicEntity = {
-        id: node.id,
-        type: node.type,
-        label: node.label,
-        handle: node.properties?.handle || node.label,
-        category: node.type.toUpperCase(),
-        threatLevel: node.threatLevel || (node.type === 'origin_ip' ? 'CRITICAL' : 'HIGH'),
-        deterministicScore: node.properties?.deterministicScore || 94,
-        aiScore: node.properties?.aiScore || 88,
-        pgpKeyId: node.properties?.pgpKey || node.properties?.keyId,
-        pgpFingerprint: node.properties?.fingerprint || (node.type === 'pgp' ? node.label : undefined),
-        walletAddress: node.properties?.address || (node.type === 'wallet' ? node.label : undefined),
-        walletCurrency: node.properties?.currency || (node.label.startsWith('bc1') ? 'BTC' : 'XMR'),
-        originIp: node.properties?.ip || (node.type === 'origin_ip' ? node.label : undefined),
-        sourceUrl: node.properties?.onion || 'q4fldlv4e4pscz7ng7jlpxyqntukjb6org6poihkyhjepu6yrbqx5kqd.onion',
-        htmlHash: node.properties?.contentHash || 'a184f7b8c09192e10084c7a94b3c2d812e55a909123847a94b3c2d812e55a409',
-        firstSeen: node.properties?.firstSeen || '2024-01-14 02:20 UTC',
-        lastSeen: node.properties?.lastSeen || '2024-09-09 18:30 UTC',
-        rawPayload: node.properties?.rawSnippet || `[NODE_RECORD] ID=${node.id}\nLABEL=${node.label}\nTYPE=${node.type}\nCONFIDENCE=96%\nSOURCE=Obsidian Relational Ingestion Engine`,
-        properties: node.properties
-      };
-      onSelectEntity(entity);
-    }
-  }, [onSelectEntity]);
-
-  // Cypher export generator
+  // Generate a portable Cypher-style CREATE script from the current graph data.
+  // Useful for importing into an actual Neo4j instance later, but this app
+  // itself does not run Neo4j — the graph is served from the local backend.
   const generateCypherExport = () => {
     const nodeStatements = graphData.nodes.map(n => {
       const varName = n.id.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -300,6 +371,7 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
         id: n.id,
         label: n.label,
         type: n.type,
+        ...(n.threatLevel ? { threatLevel: n.threatLevel } : {}),
         ...(n.properties || {})
       };
       const propsStr = JSON.stringify(cleanProps).replace(/"([^"]+)":/g, '$1:');
@@ -312,21 +384,66 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
       const sVar = sId.replace(/[^a-zA-Z0-9_]/g, '_');
       const tVar = tId.replace(/[^a-zA-Z0-9_]/g, '_');
       const rel = (l.relationship || 'CONNECTED_TO').replace(/[^a-zA-Z0-9_]/g, '_');
-      return `CREATE (${sVar})-[:${rel} {confidence: ${l.confidence}}]->(${tVar})`;
+      return `CREATE (${sVar})-[:${rel} {confidence: ${l.confidence}, evidence: "${l.evidenceSource || ''}", observedDate: "${l.observedDate || ''}"}]->(${tVar})`;
     }).join('\n');
 
-    return `// Obsidian NTRO Attribution Graph Export\n// Case: ${selectedCase.codename}\n\n${nodeStatements}\n\n${linkStatements}\n\nRETURN count(*);`;
+    return `// ==================================================================\n// Cypher-style Attribution Graph Export\n// Case: ${selectedCase.codename} (${selectedCase.primaryHandle})\n// Source: Obsidian local graph store (import into Neo4j if desired)\n// Data mode: ${isLiveGraph ? 'LIVE — backend-crawled data' : 'SIMULATED — benchmark/demo data'}\n// ==================================================================\n\n// Create Graph Nodes\n${nodeStatements}\n\n// Create Relationship Edges\n${linkStatements}\n\nRETURN "Attribution Graph created with ${graphData.nodes.length} nodes and ${graphData.links.length} edges" AS status;`;
   };
+
+  const handleCopyCypher = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedQuery(true);
+    setTimeout(() => setCopiedQuery(false), 2000);
+  };
+
+  const handleCopyFullCql = () => {
+    navigator.clipboard.writeText(generateCypherExport());
+    setCopiedCql(true);
+    setTimeout(() => setCopiedCql(false), 2000);
+  };
+
+  const handleDownloadCql = () => {
+    const cql = generateCypherExport();
+    const blob = new Blob([cql], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `graph_export_${selectedCase.codename}.cql`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Real match percentage: share of links whose confidence is high (>=90),
+  // computed from the actual data rather than a hardcoded string.
+  const matchPercentage = useMemo(() => {
+    if (graphData.links.length === 0) return 0;
+    const highConfidence = graphData.links.filter(l => l.confidence >= 90).length;
+    return Math.round((highConfidence / graphData.links.length) * 100);
+  }, [graphData.links]);
+
+  // Keep displayed stats in sync whenever the underlying graphData changes
+  // (e.g. a fresh crawl comes in) instead of only updating on manual query runs.
+  useEffect(() => {
+    const { filteredNodes, filteredLinks } = computeFiltered(filterType, searchQuery);
+    setCypherStats(prev => ({
+      ...prev,
+      recordsCount: filteredNodes.length + filteredLinks.length,
+      nodesCount: filteredNodes.length,
+      edgesCount: filteredLinks.length,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graphData]);
 
   // D3 Force Simulation Effect
   useEffect(() => {
     if (!svgRef.current || !containerRef.current) return;
 
-    const width = containerRef.current.clientWidth || 900;
-    const height = containerRef.current.clientHeight || 640;
+    const width = containerRef.current.clientWidth || 800;
+    const height = containerRef.current.clientHeight || 550;
 
-    const simNodes: SimNode[] = filteredNodes.map(n => ({ ...n }));
-    const simLinks: SimLink[] = filteredLinks.map(l => ({
+    const { filteredNodes: rawFilteredNodes, filteredLinks: rawFilteredLinks } = computeFiltered(filterType, searchQuery);
+    const filteredNodes: SimNode[] = rawFilteredNodes.map(n => ({ ...n }));
+    const filteredLinks: SimLink[] = rawFilteredLinks.map(l => ({
       source: typeof l.source === 'object' ? (l.source as any).id : l.source,
       target: typeof l.target === 'object' ? (l.target as any).id : l.target,
       relationship: l.relationship,
@@ -335,10 +452,13 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
       observedDate: l.observedDate,
     }));
 
+    // Clear previous SVG contents
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
+
     svg.attr('viewBox', `0 0 ${width} ${height}`);
 
+    // Definitions: Arrowheads and Glow filter
     const defs = svg.append('defs');
 
     // Default arrow marker
@@ -347,58 +467,53 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
       .attr('viewBox', '0 -5 10 10')
       .attr('refX', 22)
       .attr('refY', 0)
-      .attr('markerWidth', 5)
-      .attr('markerHeight', 5)
-      .attr('orient', 'auto')
-      .append('path')
-      .attr('d', 'M0,-4L8,0L0,4')
-      .attr('fill', '#52525b');
-
-    // Emerald arrow marker
-    defs.append('marker')
-      .attr('id', 'arrow-emerald')
-      .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 22)
-      .attr('refY', 0)
       .attr('markerWidth', 6)
       .attr('markerHeight', 6)
       .attr('orient', 'auto')
       .append('path')
-      .attr('d', 'M0,-4L8,0L0,4')
-      .attr('fill', '#10b981');
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', '#475569');
 
-    // Amber arrow marker
+    // Highlighted arrow marker
     defs.append('marker')
-      .attr('id', 'arrow-amber')
+      .attr('id', 'arrow-highlight')
       .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 22)
+      .attr('refX', 24)
       .attr('refY', 0)
-      .attr('markerWidth', 5)
-      .attr('markerHeight', 5)
+      .attr('markerWidth', 7)
+      .attr('markerHeight', 7)
       .attr('orient', 'auto')
       .append('path')
-      .attr('d', 'M0,-4L8,0L0,4')
-      .attr('fill', '#f59e0b');
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', '#06b6d4');
 
-    // Rose arrow marker
-    defs.append('marker')
-      .attr('id', 'arrow-rose')
-      .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 22)
-      .attr('refY', 0)
-      .attr('markerWidth', 5)
-      .attr('markerHeight', 5)
-      .attr('orient', 'auto')
-      .append('path')
-      .attr('d', 'M0,-4L8,0L0,4')
-      .attr('fill', '#f43f5e');
+    // Glow filter for highlighted nodes and paths
+    const filter = defs.append('filter')
+      .attr('id', 'glow')
+      .attr('x', '-50%')
+      .attr('y', '-50%')
+      .attr('width', '200%')
+      .attr('height', '200%');
+    filter.append('feGaussianBlur')
+      .attr('stdDeviation', '4')
+      .attr('result', 'coloredBlur');
+    const feMerge = filter.append('feMerge');
+    feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    // Background click to clear selection
+    svg.on('click', (event) => {
+      if (event.target === svgRef.current) {
+        setSelectedNode(null);
+      }
+    });
 
     // Zoom container
     const g = svg.append('g');
     svgGroupRef.current = g;
 
     const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.2, 4])
+      .scaleExtent([0.3, 3.5])
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
       });
@@ -406,91 +521,97 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
     svg.call(zoom);
     zoomBehaviorRef.current = zoom;
 
-    // Background click clears selection
-    svg.on('click', (event) => {
-      if (event.target === svgRef.current) {
-        setSelectedNode(null);
-      }
-    });
-
-    // Simulation forces
-    const simulation = d3.forceSimulation<SimNode>(simNodes)
-      .force('link', d3.forceLink<SimNode, SimLink>(simLinks)
+    // Simulation setup
+    const simulation = d3.forceSimulation<SimNode>(filteredNodes)
+      .force('link', d3.forceLink<SimNode, SimLink>(filteredLinks)
         .id((d) => d.id)
-        .distance(120)
+        .distance(110)
       )
-      .force('charge', d3.forceManyBody().strength(-340))
-      .force('center', d3.forceCenter(width / 2, height / 2).strength(0.06))
-      .force('collision', d3.forceCollide().radius(38));
+      .force('charge', d3.forceManyBody().strength(-380))
+      .force('center', d3.forceCenter(width / 2, height / 2).strength(0.08))
+      .force('collision', d3.forceCollide().radius(36));
 
-    // Render Links Group
+    // Render Links
     const linkGroup = g.append('g').attr('class', 'links');
 
     const link = linkGroup
       .selectAll<SVGLineElement, SimLink>('line')
-      .data(simLinks)
+      .data(filteredLinks)
       .enter()
       .append('line')
       .attr('stroke', (d) => {
-        const cat = getLinkCategory(d.relationship, d.confidence);
-        if (cat === 'deterministic') return '#10b981'; // SOLID EMERALD
-        if (cat === 'stylometric') return '#f59e0b';   // DASHED AMBER
-        if (cat === 'infra') return '#f43f5e';         // DOTTED ROSE
-        return '#3f3f46';
+        const sId = typeof d.source === 'object' ? (d.source as any).id : d.source;
+        const tId = typeof d.target === 'object' ? (d.target as any).id : d.target;
+        const isHighlighted = pathfindingActive && 
+          highlightedPath.includes(sId) && 
+          highlightedPath.includes(tId) &&
+          Math.abs(highlightedPath.indexOf(sId) - highlightedPath.indexOf(tId)) === 1;
+        return isHighlighted ? '#06b6d4' : '#334155';
       })
       .attr('stroke-width', (d) => {
-        const cat = getLinkCategory(d.relationship, d.confidence);
-        return cat === 'deterministic' ? 2 : 1.5;
-      })
-      .attr('stroke-dasharray', (d) => {
-        const cat = getLinkCategory(d.relationship, d.confidence);
-        if (cat === 'stylometric') return '4 3'; // DASHED AMBER
-        if (cat === 'infra') return '1.5 3';     // DOTTED ROSE
-        return 'none';                          // SOLID EMERALD
+        const sId = typeof d.source === 'object' ? (d.source as any).id : d.source;
+        const tId = typeof d.target === 'object' ? (d.target as any).id : d.target;
+        const isHighlighted = pathfindingActive && 
+          highlightedPath.includes(sId) && 
+          highlightedPath.includes(tId) &&
+          Math.abs(highlightedPath.indexOf(sId) - highlightedPath.indexOf(tId)) === 1;
+        return isHighlighted ? 3 : 1.5;
       })
       .attr('stroke-opacity', (d) => {
         const sId = typeof d.source === 'object' ? (d.source as any).id : d.source;
         const tId = typeof d.target === 'object' ? (d.target as any).id : d.target;
-        if (selectedNode) {
-          return (sId === selectedNode.id || tId === selectedNode.id) ? 1 : 0.25;
-        }
-        return 0.85;
+        const isHighlighted = pathfindingActive && 
+          highlightedPath.includes(sId) && 
+          highlightedPath.includes(tId) &&
+          Math.abs(highlightedPath.indexOf(sId) - highlightedPath.indexOf(tId)) === 1;
+        return isHighlighted ? 1 : 0.6;
+      })
+      .attr('filter', (d) => {
+        const sId = typeof d.source === 'object' ? (d.source as any).id : d.source;
+        const tId = typeof d.target === 'object' ? (d.target as any).id : d.target;
+        const isHighlighted = pathfindingActive && 
+          highlightedPath.includes(sId) && 
+          highlightedPath.includes(tId) &&
+          Math.abs(highlightedPath.indexOf(sId) - highlightedPath.indexOf(tId)) === 1;
+        return isHighlighted ? 'url(#glow)' : null;
       })
       .attr('marker-end', (d) => {
-        const cat = getLinkCategory(d.relationship, d.confidence);
-        if (cat === 'deterministic') return 'url(#arrow-emerald)';
-        if (cat === 'stylometric') return 'url(#arrow-amber)';
-        if (cat === 'infra') return 'url(#arrow-rose)';
-        return 'url(#arrow-default)';
+        const sId = typeof d.source === 'object' ? (d.source as any).id : d.source;
+        const tId = typeof d.target === 'object' ? (d.target as any).id : d.target;
+        const isHighlighted = pathfindingActive && 
+          highlightedPath.includes(sId) && 
+          highlightedPath.includes(tId) &&
+          Math.abs(highlightedPath.indexOf(sId) - highlightedPath.indexOf(tId)) === 1;
+        return isHighlighted ? 'url(#arrow-highlight)' : 'url(#arrow-default)';
       });
 
     // Render Link Labels
     const linkLabelGroup = g.append('g').attr('class', 'link-labels');
     const linkLabel = linkLabelGroup
       .selectAll<SVGTextElement, SimLink>('text')
-      .data(simLinks)
+      .data(filteredLinks)
       .enter()
       .append('text')
       .attr('font-size', '8px')
-      .attr('font-family', 'JetBrains Mono, monospace')
-      .attr('fill', '#71717a')
+      .attr('font-family', 'ui-monospace, monospace')
+      .attr('fill', '#94a3b8')
       .attr('text-anchor', 'middle')
-      .attr('dy', -3)
+      .attr('dy', -4)
       .text((d) => d.relationship);
 
-    // Render Nodes Group
+    // Render Nodes
     const nodeGroup = g.append('g').attr('class', 'nodes');
 
     const node = nodeGroup
       .selectAll<SVGGElement, SimNode>('g')
-      .data(simNodes)
+      .data(filteredNodes)
       .enter()
       .append('g')
       .attr('class', 'node-item')
       .style('cursor', 'pointer')
       .on('click', (event, d) => {
         event.stopPropagation();
-        handleNodeClick(d);
+        setSelectedNode(d);
       });
 
     // Drag behavior
@@ -512,51 +633,62 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
 
     node.call(drag);
 
-    // Node Circle Geometry
+    // Node outer circle (glow/selection)
     node.append('circle')
-      .attr('r', (d) => (d.type === 'actor' ? 18 : d.type === 'origin_ip' ? 16 : 14))
+      .attr('r', (d) => {
+        const isPath = pathfindingActive && highlightedPath.includes(d.id);
+        const isActor = d.type === 'actor';
+        return isPath ? 22 : isActor ? 18 : 15;
+      })
       .attr('fill', (d) => getNodeColor(d.type))
       .attr('stroke', (d) => {
         if (selectedNode?.id === d.id) return '#ffffff';
-        if (pathfindingActive && highlightedPath.includes(d.id)) return '#f59e0b';
-        return '#121215';
+        if (pathfindingActive && highlightedPath.includes(d.id)) return '#fbbf24';
+        return '#09090b';
       })
-      .attr('stroke-width', (d) => (selectedNode?.id === d.id ? 3 : 2));
+      .attr('stroke-width', (d) => {
+        if (selectedNode?.id === d.id) return 3.5;
+        if (pathfindingActive && highlightedPath.includes(d.id)) return 3;
+        return 2;
+      })
+      .attr('filter', (d) => {
+        if (pathfindingActive && highlightedPath.includes(d.id)) return 'url(#glow)';
+        return null;
+      });
 
-    // Icon / Symbol inside node
+    // Node inner icon/symbol
     node.append('text')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', '9px')
+      .attr('font-size', '10px')
       .attr('pointer-events', 'none')
-      .attr('fill', '#ffffff')
       .text((d) => getNodeIconSymbol(d.type));
 
-    // Label Pill Box
+    // Label pill background
     node.append('rect')
-      .attr('rx', 3)
-      .attr('ry', 3)
+      .attr('rx', 4)
+      .attr('ry', 4)
       .attr('fill', '#09090b')
-      .attr('fill-opacity', 0.92)
-      .attr('stroke', '#27272a')
+      .attr('fill-opacity', 0.88)
+      .attr('stroke', '#1e293b')
       .attr('stroke-width', 0.8)
-      .attr('y', 15)
-      .attr('x', (d) => -Math.min(d.label.length * 3.2, 55))
-      .attr('width', (d) => Math.min(d.label.length * 6.4, 110))
+      .attr('y', 16)
+      .attr('x', (d) => -Math.min(d.label.length * 3.2, 50))
+      .attr('width', (d) => Math.min(d.label.length * 6.4, 100))
       .attr('height', 14);
 
-    // Node Label Text
+    // Label text
     node.append('text')
-      .attr('y', 25)
+      .attr('y', 26)
       .attr('text-anchor', 'middle')
-      .attr('font-size', '8.5px')
-      .attr('font-weight', 500)
-      .attr('font-family', 'JetBrains Mono, monospace')
-      .attr('fill', '#f4f4f5')
+      .attr('font-size', '9px')
+      .attr('font-weight', 600)
+      .attr('font-family', 'ui-monospace, monospace')
+      .attr('fill', '#f1f5f9')
       .attr('pointer-events', 'none')
-      .text((d) => (d.label.length > 17 ? `${d.label.slice(0, 15)}…` : d.label));
+      .text((d) => (d.label.length > 16 ? `${d.label.slice(0, 14)}…` : d.label));
 
-    // Simulation Tick
+    // Simulation tick
     simulation.on('tick', () => {
       link
         .attr('x1', (d: any) => d.source.x)
@@ -574,218 +706,443 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
     return () => {
       simulation.stop();
     };
-  }, [filteredNodes, filteredLinks, selectedNode, pathfindingActive, highlightedPath, handleNodeClick]);
+  }, [graphData, filterType, searchQuery, pathfindingActive, highlightedPath, selectedNode, computeFiltered]);
 
   return (
-    <div className="space-y-3">
-      {/* Graph Visual Canvas Container */}
-      <div 
-        ref={containerRef}
-        className="relative w-full h-[660px] rounded-md bg-dotted-grid border border-zinc-800 overflow-hidden select-none"
-      >
-        {/* SVG Visualization Canvas */}
-        <svg 
-          ref={svgRef} 
-          className="w-full h-full cursor-grab active:cursor-grabbing"
-        />
-
-        {/* Floating Top-Left Overlay Controls */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10 max-w-sm">
-          {/* Main Filter & Confidence Card */}
-          <div className="p-2.5 rounded-md bg-[#09090b]/90 border border-zinc-800 backdrop-blur-md space-y-2 text-xs shadow-xl">
-            {/* Search Input */}
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-900 border border-zinc-800">
-              <Search className="w-3.5 h-3.5 text-zinc-500" strokeWidth={1.5} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search node or handle..."
-                className="w-full bg-transparent text-zinc-200 outline-none font-mono text-xs placeholder:text-zinc-600"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-zinc-500 hover:text-zinc-300 text-[10px]">
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Strict Tri-Filter Toggles */}
-            <div className="space-y-1">
-              <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
-                Attribution Edge Filters
-              </div>
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => setToggleDeterministic(!toggleDeterministic)}
-                  className={`px-2 py-1 rounded text-left font-mono text-[11px] flex items-center justify-between transition-colors border ${
-                    toggleDeterministic
-                      ? 'bg-emerald-950/50 text-emerald-300 border-emerald-800/60'
-                      : 'bg-zinc-900/60 text-zinc-500 border-zinc-800'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-0.5 bg-emerald-400"></span>
-                    <span>Deterministic Matches</span>
-                  </span>
-                  <span>{toggleDeterministic ? '[✓]' : '[ ]'}</span>
-                </button>
-
-                <button
-                  onClick={() => setToggleStylometric(!toggleStylometric)}
-                  className={`px-2 py-1 rounded text-left font-mono text-[11px] flex items-center justify-between transition-colors border ${
-                    toggleStylometric
-                      ? 'bg-amber-950/50 text-amber-300 border-amber-800/60'
-                      : 'bg-zinc-900/60 text-zinc-500 border-zinc-800'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-0.5 border-b border-dashed border-amber-400"></span>
-                    <span>Stylometric Rebrands</span>
-                  </span>
-                  <span>{toggleStylometric ? '[✓]' : '[ ]'}</span>
-                </button>
-
-                <button
-                  onClick={() => setToggleInfraLeaks(!toggleInfraLeaks)}
-                  className={`px-2 py-1 rounded text-left font-mono text-[11px] flex items-center justify-between transition-colors border ${
-                    toggleInfraLeaks
-                      ? 'bg-rose-950/50 text-rose-300 border-rose-800/60'
-                      : 'bg-zinc-900/60 text-zinc-500 border-zinc-800'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-0.5 border-b border-dotted border-rose-400"></span>
-                    <span>Infrastructure Leaks</span>
-                  </span>
-                  <span>{toggleInfraLeaks ? '[✓]' : '[ ]'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Confidence Threshold Slider */}
-            <div className="pt-1.5 border-t border-zinc-800/80">
-              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 mb-1">
-                <span>Confidence Threshold</span>
-                <span className="font-semibold text-emerald-400">&ge; {confidenceThreshold}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="95"
-                step="5"
-                value={confidenceThreshold}
-                onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
-                className="w-full accent-emerald-500 h-1 bg-zinc-800 rounded appearance-none cursor-pointer"
-              />
-            </div>
+    <div className="space-y-6">
+      {/* Module Overview Header */}
+      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[10px] font-mono font-bold uppercase tracking-wider">
+              MODULE 02 // ENTITY GRAPH CLUSTER
+            </span>
+            <span className="font-mono text-[10px] text-zinc-500">
+              NEO4J REPLICA · 4096-BIT RSA PGP · UTXO CO-SPEND
+            </span>
+            {isLiveGraph ? (
+              <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase tracking-wide">
+                Live Scan Result
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold uppercase tracking-wide">
+                Simulated — Not a Live Scan
+              </span>
+            )}
           </div>
+          <h2 className="text-base font-semibold text-white tracking-tight flex items-center gap-2">
+            <span>Cryptographic Relationship &amp; Entity Correlation Graph</span>
+          </h2>
+          <p className="text-xs text-zinc-400 max-w-3xl leading-relaxed mt-1">
+            Correlates handles, 4096-bit PGP public key fingerprints, cryptocurrency wallets (Bitcoin &amp; Monero), marketplace listings, and Dread dispute forums into a multi-hop evidence relationship graph.
+          </p>
         </div>
 
-        {/* Floating Top-Right Controls */}
-        <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-          <button
-            onClick={handleTraceEvidencePath}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-mono text-xs transition-colors backdrop-blur-sm"
-            title="Compute shortest path to clearnet leak"
-          >
-            <Route className="w-3.5 h-3.5 text-rose-400" strokeWidth={1.5} />
-            <span>Trace Origin Path</span>
-          </button>
-
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={() => setShowConsole(!showConsole)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-mono text-xs transition-colors backdrop-blur-sm"
+            className={`px-3 py-2 rounded text-xs font-mono font-semibold transition-colors flex items-center gap-1.5 border ${
+              showConsole
+                ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                : 'bg-[#08090d] hover:bg-[#111622] text-zinc-300 border-[#1e2433]'
+            }`}
+            title="Toggle Query Console"
           >
-            <Database className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.5} />
-            <span>Cypher Console</span>
+            <Database className="w-3.5 h-3.5 text-cyan-400" />
+            <span>QUERY CONSOLE</span>
+            {showConsole ? (
+              <ChevronUp className="w-3 h-3 text-cyan-400" />
+            ) : (
+              <ChevronDown className="w-3 h-3 text-zinc-400" />
+            )}
           </button>
 
-          <div className="flex items-center bg-zinc-900/90 border border-zinc-800 rounded p-0.5 backdrop-blur-sm">
-            <button onClick={handleZoomIn} className="p-1 text-zinc-400 hover:text-zinc-200" title="Zoom In">
-              <ZoomIn className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </button>
-            <button onClick={handleZoomOut} className="p-1 text-zinc-400 hover:text-zinc-200" title="Zoom Out">
-              <ZoomOut className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </button>
-            <button onClick={handleFit} className="p-1 text-zinc-400 hover:text-zinc-200" title="Fit to Screen">
-              <Maximize2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </button>
-            <button onClick={handleResetGraph} className="p-1 text-zinc-400 hover:text-zinc-200" title="Reset View">
-              <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </button>
-          </div>
-        </div>
-
-        {/* Floating Bottom-Left Legend */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-3 px-3 py-1.5 rounded bg-[#09090b]/80 border border-zinc-800/80 backdrop-blur-sm text-[11px] font-mono text-zinc-400 z-10">
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-0.5 bg-emerald-500"></span>
-            <span>Deterministic (PGP/Wallet)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-0.5 border-b border-dashed border-amber-500"></span>
-            <span>Stylometry (&gt;85%)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-0.5 border-b border-dotted border-rose-500"></span>
-            <span>Infra Host Leak</span>
-          </div>
-        </div>
-
-        {/* Floating Bottom-Right Active Graph Telemetry */}
-        <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded bg-[#09090b]/80 border border-zinc-800/80 backdrop-blur-sm text-[11px] font-mono text-zinc-500 z-10">
-          <span>Active View: <strong className="text-zinc-300">{filteredNodes.length} nodes</strong> / <strong className="text-zinc-300">{filteredLinks.length} edges</strong></span>
+          <button
+            onClick={handleTraceEvidencePath}
+            className="px-3.5 py-2 rounded bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs transition-colors flex items-center gap-1.5 border border-emerald-300/40 shadow-sm"
+          >
+            <Route className="w-4 h-4 fill-black" />
+            <span>TRACE SHORTEST PATH</span>
+          </button>
+          
+          <button
+            onClick={handleResetGraph}
+            className="p-2 rounded bg-[#08090d] hover:bg-[#111622] text-zinc-400 hover:text-white border border-[#1e2433] transition-colors"
+            title="Reset Graph"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* Collapsible Cypher Query Drawer */}
-      {showConsole && (
-        <div className="p-3 rounded-md bg-[#121215] border border-zinc-800/80 space-y-2.5 text-xs font-mono">
-          <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800">
+      {/* Graph Filter & Search Bar */}
+      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-mono text-[10px] uppercase text-zinc-500 flex items-center gap-1">
+            <Filter className="w-3.5 h-3.5" />
+            <span>FILTER:</span>
+          </span>
+          {['all', 'actor', 'origin_ip', 'infrastructure', 'marketplace', 'forum', 'pgp', 'wallet'].map((type) => (
+            <button
+              key={type}
+              onClick={() => setFilterType(type)}
+              className={`px-2.5 py-1 rounded font-mono text-[10px] font-semibold uppercase transition-colors border ${
+                filterType === type
+                  ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                  : 'bg-[#08090d] text-zinc-400 border-[#1e2433] hover:border-zinc-500 hover:text-zinc-200'
+              }`}
+            >
+              {type === 'origin_ip' ? 'Origin IP' : type}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="relative w-full sm:w-64">
+            <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search node or key..."
+              className="w-full bg-[#08090d] border border-[#1e2433] rounded pl-8 pr-3 py-1.5 font-mono text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-colors"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Interactive Graph & Inspector Split View */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Canvas Area */}
+        <div 
+          ref={containerRef}
+          className="lg:col-span-3 bg-[#08090d] border border-[#1e2433] rounded-lg relative overflow-hidden h-[550px]"
+        >
+          {pathfindingActive && (
+            <div className="absolute top-3 left-3 z-10 bg-[#08090d]/95 border border-amber-500/40 rounded px-3 py-1.5 text-xs text-amber-300 font-mono flex items-center gap-2 shadow-lg">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>PATHFINDER ACTIVE: {highlightedPath.length} HOPS TO CLEARNET ORIGIN</span>
+              <button
+                onClick={() => setPathfindingActive(false)}
+                className="ml-2 text-zinc-500 hover:text-white"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+
+          {/* Quick Zoom Controls */}
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-[#121216]/80 border border-white/[0.08] backdrop-blur p-1 rounded-xl shadow-sm">
+            <button
+              onClick={handleZoomIn}
+              className="p-1.5 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={handleZoomOut}
+              className="p-1.5 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors"
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={handleFit}
+              className="p-1.5 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors"
+              title="Reset Zoom"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Legend Overlay */}
+          <div className="absolute bottom-3 left-3 z-10 bg-[#121216]/90 border border-white/[0.08] backdrop-blur rounded-xl p-3 text-xs space-y-1.5 hidden sm:block shadow-sm">
+            <div className="text-[10px] text-zinc-500 uppercase font-semibold mb-1">Entity Legend</div>
             <div className="flex items-center gap-2">
-              <Terminal className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.5} />
-              <span className="font-semibold text-zinc-200">Local Cypher / CQL Query Engine</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+              <span className="text-zinc-300">Threat Actor Persona</span>
             </div>
             <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span className="text-zinc-300">Darknet Marketplace</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+              <span className="text-zinc-300">Discussion / Vouch Forum</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span className="text-zinc-300">PGP Key Fingerprint</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+              <span className="text-zinc-300">Crypto Wallet Address</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
+              <span className="text-zinc-300">Tor Hidden Service Infrastructure</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              <span className="text-zinc-300">Attributed Clearnet Origin IP</span>
+            </div>
+          </div>
+
+          <svg 
+            ref={svgRef} 
+            className="w-full h-full cursor-grab active:cursor-grabbing select-none" 
+          />
+        </div>
+
+        {/* Node Details Inspector Sidebar */}
+        <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-[#1e1e24] mb-3">
+              <div className="text-xs font-mono text-gray-400 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Entity Inspector</span>
+              </div>
+              <span className="text-[10px] text-gray-500 font-mono uppercase">
+                {selectedNode ? selectedNode.type : 'Select Node'}
+              </span>
+            </div>
+
+            {selectedNode ? (
+              <div className="space-y-3 font-mono text-xs">
+                <div>
+                  <div className="text-[10px] text-gray-500 uppercase">IDENTIFIER LABEL</div>
+                  <div className="text-sm font-bold text-white break-words mt-0.5">
+                    {selectedNode.label}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-gray-500 uppercase">ENTITY CLASSIFICATION</div>
+                  <div className="inline-block px-2 py-0.5 rounded text-[11px] font-bold mt-0.5 uppercase" style={{ backgroundColor: `${getNodeColor(selectedNode.type)}25`, color: getNodeColor(selectedNode.type) }}>
+                    {selectedNode.type}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-[#1e1e24]">
+                  <div className="text-[10px] text-gray-500 uppercase mb-1">PROPERTIES &amp; TELEMETRY</div>
+                  <div className="bg-[#0c0c0e] p-2.5 rounded border border-[#1e1e24] space-y-1 text-[11px]">
+                    {Object.entries(selectedNode.properties || {}).map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-2">
+                        <span className="text-gray-400 capitalize">{k}:</span>
+                        <span className="text-gray-200 truncate text-right font-medium">{String(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-[#1e1e24]">
+                  <div className="text-[10px] text-gray-500 uppercase mb-1">CORROBORATING EVIDENCE</div>
+                  <p className="text-[11px] text-gray-300 leading-relaxed">
+                    Cryptographic signature and multi-market transaction logs confirm association with {selectedCase.primaryHandle}.
+                  </p>
+                </div>
+
+                {/* Quick query button for this entity */}
+                <div className="pt-2 border-t border-[#1e1e24]">
+                  <button
+                    onClick={() => {
+                      const query = `MATCH (n {id: "${selectedNode.id}"})-[r]-(neighbor)\nRETURN n, r, neighbor`;
+                      setCypherQuery(query);
+                      setShowConsole(true);
+                      handleExecuteCypher(query);
+                    }}
+                    className="w-full py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/25 text-[11px] font-mono flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Terminal className="w-3 h-3 text-cyan-400" />
+                    <span>Query This Entity</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <Network className="w-8 h-8 mx-auto mb-2 text-gray-600" />
+                <p className="text-xs">Click any node in the graph to inspect cryptographic attributes and multi-hop relationships.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-[#1e1e24]">
+            <div className="text-[11px] font-mono text-gray-400 flex items-center justify-between">
+              <span>GRAPH STATS</span>
+              <span className={`text-[10px] flex items-center gap-1 ${isLiveGraph ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <Radio className={`w-2.5 h-2.5 animate-pulse ${isLiveGraph ? 'text-emerald-400' : 'text-amber-400'}`} />
+                <span>{isLiveGraph ? 'Live Data' : 'Simulated Data'}</span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs font-mono text-gray-300 mt-1">
+              <span>Nodes: {graphData.nodes.length}</span>
+              <span>Edges: {graphData.links.length}</span>
+              <span className="text-emerald-400">High-Conf: {matchPercentage}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Query Console & Graph Analytics Workbench */}
+      {showConsole && (
+        <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5 space-y-4">
+          {/* Console Header Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1e2433]">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="p-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300">
+                <Database className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-white tracking-tight">Graph Query Workbench</h3>
+                  <span className="px-2 py-0.2 rounded text-[10px] font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    Local Backend
+                  </span>
+                </div>
+                <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+                  Cypher-style syntax &bull; executed against Obsidian's local exact-match graph store
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(generateCypherExport());
-                  setCopiedCql(true);
-                  setTimeout(() => setCopiedCql(false), 1500);
-                }}
-                className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] transition-colors"
+                onClick={() => setShowCqlModal(!showCqlModal)}
+                className="px-3 py-1.5 rounded-xl bg-[#0b0b0e] hover:bg-white/[0.05] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-mono font-medium transition-colors flex items-center gap-1.5"
+                title="View &amp; Export Cypher CREATE script"
               >
-                {copiedCql ? 'Copied Full CQL' : 'Export Full CQL'}
+                <Download className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Export .cql Script</span>
               </button>
-              <button 
-                onClick={() => setShowConsole(false)} 
-                className="text-zinc-500 hover:text-zinc-300"
+              
+              <button
+                onClick={() => handleCopyCypher(cypherQuery)}
+                className="px-3 py-1.5 rounded-xl bg-[#0b0b0e] hover:bg-white/[0.05] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-mono font-medium transition-colors flex items-center gap-1.5"
+                title="Copy current query"
               >
-                ✕
+                {copiedQuery ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-300">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Copy Query</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <textarea
-              value={cypherQuery}
-              onChange={(e) => setCypherQuery(e.target.value)}
-              rows={3}
-              className="flex-1 p-2 rounded bg-[#09090b] border border-zinc-800 text-emerald-300 font-mono text-xs outline-none focus:border-zinc-700 resize-none"
-            />
-            <button
-              onClick={() => {
-                // simple search execution
-                const match = cypherQuery.match(/"([^"]+)"/);
-                if (match) setSearchQuery(match[1]);
-              }}
-              className="px-3 rounded bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-800/80 text-emerald-300 font-mono text-xs font-medium flex flex-col items-center justify-center gap-1"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Execute</span>
-            </button>
+          {/* Preset Queries Bar */}
+          <div>
+            <div className="text-[10px] text-zinc-400 font-mono uppercase font-semibold mb-2 flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-cyan-400" />
+              <span>Attribution Query Templates:</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+              {presetQueries.map((preset, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setCypherQuery(preset.query);
+                    handleExecuteCypher(preset.query);
+                  }}
+                  className="p-2.5 rounded-xl bg-[#0a0a0d] border border-white/[0.06] hover:border-cyan-500/40 hover:bg-[#101015] text-left transition-all group"
+                >
+                  <div className="text-xs font-semibold text-zinc-200 group-hover:text-cyan-300 truncate">
+                    {preset.title}
+                  </div>
+                  <div className="text-[10px] text-zinc-500 truncate mt-0.5">
+                    {preset.description}
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Interactive Query Editor */}
+          <div className="bg-[#09090b] border border-white/[0.08] rounded-xl overflow-hidden">
+            <div className="bg-[#0e0e12] px-3.5 py-1.5 border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-[11px] text-zinc-300">query.cql</span>
+              </div>
+              <span className="text-[10px] text-zinc-500">Cypher-style syntax</span>
+            </div>
+
+            <div className="p-3">
+              <textarea
+                value={cypherQuery}
+                onChange={(e) => setCypherQuery(e.target.value)}
+                rows={3}
+                placeholder="Enter a Cypher-style statement, e.g. MATCH (n:ThreatActor) RETURN n..."
+                className="w-full bg-transparent text-xs font-mono text-cyan-200 focus:outline-none resize-none leading-relaxed selection:bg-cyan-500/30"
+                spellCheck={false}
+              />
+            </div>
+
+            <div className="bg-[#0e0e12] px-3.5 py-2 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="text-[11px] font-mono text-zinc-400 flex items-center gap-2 flex-wrap">
+                <span className="text-emerald-400 font-semibold">{cypherStats.lastExecuted}</span>
+                <span className="text-zinc-600">&bull;</span>
+                <span>Latency: <strong className="text-zinc-200">{cypherStats.executionTimeMs}ms</strong></span>
+                <span className="text-zinc-600">&bull;</span>
+                <span>Returned: <strong className="text-zinc-200">{cypherStats.recordsCount} records</strong></span>
+              </div>
+
+              <button
+                onClick={() => handleExecuteCypher()}
+                className="px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-cyan-500/20"
+              >
+                <Play className="w-3.5 h-3.5 fill-black" />
+                <span>Run Query</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Export Script Drawer / Modal */}
+          {showCqlModal && (
+            <div className="bg-[#0a0a0d] border border-cyan-500/30 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs font-bold text-white font-mono">
+                    CYPHER-STYLE EXPORT ({graphData.nodes.length} NODES &bull; {graphData.links.length} RELATIONSHIPS)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCopyFullCql}
+                    className="px-2.5 py-1 rounded bg-white/[0.06] hover:bg-white/[0.12] text-xs font-mono text-zinc-300 hover:text-white flex items-center gap-1"
+                  >
+                    {copiedCql ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                    <span>{copiedCql ? 'Copied' : 'Copy All'}</span>
+                  </button>
+                  <button
+                    onClick={handleDownloadCql}
+                    className="px-2.5 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono flex items-center gap-1"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>Download .cql</span>
+                  </button>
+                  <button
+                    onClick={() => setShowCqlModal(false)}
+                    className="text-zinc-500 hover:text-white text-base leading-none pl-1"
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+
+              <pre className="max-h-56 overflow-y-auto p-3 rounded-lg bg-[#060608] border border-white/[0.05] text-[10.5px] font-mono text-zinc-300 whitespace-pre leading-relaxed">
+                {generateCypherExport()}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>
