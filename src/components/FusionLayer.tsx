@@ -2,26 +2,19 @@ import React, { useState } from 'react';
 import { 
   Layers, 
   Sliders, 
-  CheckCircle2, 
-  ShieldAlert, 
   FileDown, 
-  FileText, 
-  ExternalLink,
-  HelpCircle,
-  TrendingUp,
-  Cpu,
-  Network,
+  Sparkles, 
+  Copy, 
+  Check, 
+  Brain, 
+  X, 
+  ShieldCheck, 
+  Calculator, 
+  Fingerprint, 
+  ArrowRight,
   Server,
-  Sparkles,
-  Copy,
-  Check,
-  Brain,
-  X,
-  ShieldCheck,
-  Scale,
-  Calculator,
-  Fingerprint,
-  ArrowRight
+  Network,
+  Cpu
 } from 'lucide-react';
 import { ThreatActorCase, AttributionSignalBreakdown } from '../types';
 
@@ -105,19 +98,19 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
 
   const getConfidenceRating = (score: number) => {
     if (score >= 85) return { 
-      label: 'HIGH CONFIDENCE // DAUBERT ADMISSIBLE', 
-      color: 'text-emerald-400 bg-emerald-950/40 border-emerald-800/60',
-      desc: 'Sufficiently corroborated across physical origin disclosures and cryptographic proof to satisfy legal burden of proof.'
+      label: 'High Confidence · Daubert Admissible', 
+      color: 'text-emerald-300 bg-emerald-950/60 border-emerald-800',
+      desc: 'Corroborated across network origin disclosures and cryptographic key proof to meet evidentiary standards.'
     };
     if (score >= 70) return { 
-      label: 'PROBABLE ATTRIBUTION // INVESTIGATIVE RECON', 
-      color: 'text-amber-400 bg-amber-950/40 border-amber-800/60',
-      desc: 'Strong multi-pillar correlation; warrants targeted intercept or search warrant application.'
+      label: 'Probable Attribution · Investigative', 
+      color: 'text-amber-300 bg-amber-950/60 border-amber-800',
+      desc: 'Strong multi-pillar correlation; warrants targeted investigative subpoena or warrant application.'
     };
     return { 
-      label: 'INCONCLUSIVE // INSUFFICIENT SIGNAL DIVERSITY', 
-      color: 'text-rose-400 bg-rose-950/40 border-rose-800/60',
-      desc: 'Primary signals uncorroborated; potential decoy or shared proxy artifact.'
+      label: 'Inconclusive · Weak Multi-Signal Density', 
+      color: 'text-rose-300 bg-rose-950/60 border-rose-800',
+      desc: 'Primary signals uncorroborated; potential shared infrastructure or proxy artifact.'
     };
   };
 
@@ -143,23 +136,23 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
   return (
     <div className="space-y-4">
       {/* Fusion Header */}
-      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5">
+      <div className="surface-card rounded-xl p-5 border border-[#1e273d]">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/25">
-                FUSION CORE // MCDA ENGINE
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-950/60 text-blue-400 border border-blue-800">
+                Synthesis Engine
               </span>
-              <span className="font-mono text-[10px] text-zinc-500">
-                MULTI-CRITERIA DECISION ANALYSIS · LINEAR ATTRIBUTION MODEL
+              <span className="text-xs text-slate-400">
+                Multi-Criteria Decision Analysis (MCDA) &middot; Linear Combination Model
               </span>
             </div>
-            <h2 className="text-base font-semibold text-white tracking-tight flex items-center gap-2">
-              <span>Explainable Evidentiary Attribution Scorecard</span>
-              <Calculator className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <span>Evidentiary Attribution Scorecard</span>
+              <Calculator className="w-4 h-4 text-blue-400" />
             </h2>
-            <p className="text-xs text-zinc-400 max-w-3xl leading-relaxed mt-1">
-              Eliminates attribution "black box" obscurity. Cross-synthesizes physical SOCKS5 server leaks, Neo4j cryptographic graph clusters, and linguistic stylometrics into a mathematically auditable composite score with full chain of custody.
+            <p className="text-xs text-slate-300 max-w-3xl leading-relaxed mt-1">
+              Synthesizes physical SOCKS5 server leaks, cryptographic entity graph linkages, and linguistic stylometrics into a mathematically auditable composite score with full chain of custody.
             </p>
           </div>
 
@@ -167,53 +160,53 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
             <button
               onClick={handleRunAiSynthesis}
               disabled={isSynthesizing}
-              className="px-3.5 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:bg-[#1e2433] disabled:text-zinc-600 text-white font-mono text-xs font-semibold tracking-wider transition-colors flex items-center gap-2 border border-purple-400/30 shadow-sm"
+              className="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white text-xs font-medium transition-colors flex items-center gap-2 shadow-sm"
             >
               {isSynthesizing ? (
                 <>
-                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-                  <span>SYNTHESIZING DOSSIER...</span>
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  <span>Synthesizing Dossier...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5 text-purple-200" />
-                  <span>AI FORENSIC DOSSIER</span>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>AI Case Brief</span>
                 </>
               )}
             </button>
 
             <button
               onClick={onOpenExport}
-              className="px-3.5 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-semibold tracking-wider transition-colors flex items-center gap-2 border border-cyan-400/30 shadow-sm"
+              className="px-3.5 py-2 rounded-lg bg-[#1a2236] hover:bg-[#222d47] border border-[#2d3b5c] text-white text-xs font-medium transition-colors flex items-center gap-2 shadow-sm"
             >
               <FileDown className="w-3.5 h-3.5" />
-              <span>EXPORT CASE BRIEF</span>
+              <span>Export Dossier</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Live AI Dossier Card (Gemini 3.6 Flash) */}
+      {/* Live AI Dossier Card */}
       {aiDossier && (
-        <div className="bg-[#0d1117] border border-purple-500/40 rounded-lg p-5 shadow-2xl relative animate-in fade-in duration-200">
-          <div className="flex items-center justify-between pb-3 border-b border-[#1e2433] mb-4">
+        <div className="surface-card border border-blue-600/50 rounded-xl p-5 shadow-lg relative">
+          <div className="flex items-center justify-between pb-3 border-b border-[#1b2336] mb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded bg-purple-500/15 border border-purple-500/30 text-purple-300">
-                <Brain className="w-4 h-4" />
+              <div className="p-2 rounded-lg bg-blue-950/80 border border-blue-800 text-blue-300">
+                <Brain className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-mono font-bold tracking-wider text-white uppercase">
-                    NTRO Court-Admissible De-Anonymization Synthesis Dossier
+                  <h3 className="text-sm font-bold text-white">
+                    De-Anonymization Synthesis Dossier
                   </h3>
-                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-purple-950/60 border border-purple-700/60 text-purple-300">
-                    GEMINI 3.6 FLASH · LIVE SYNTHESIS
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800 font-semibold">
+                    Gemini Analysis
                   </span>
                 </div>
-                <div className="flex items-center gap-3 font-mono text-[10px] text-zinc-500 mt-0.5">
-                  <span>SUBJECT: {selectedCase.primaryHandle} ({selectedCase.codename})</span>
-                  <span>·</span>
-                  <span>CROSS-LAYER EVIDENTIARY AUDIT</span>
+                <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                  <span>Target: {selectedCase.primaryHandle} ({selectedCase.codename})</span>
+                  <span>&middot;</span>
+                  <span>Cross-Signal Corroboration</span>
                 </div>
               </div>
             </div>
@@ -221,141 +214,141 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCopyDossier}
-                className="px-3 py-1.5 rounded bg-[#08090d] hover:bg-[#111622] border border-[#1e2433] text-zinc-300 hover:text-white text-xs font-mono flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-[#141a28] hover:bg-[#1a2336] border border-[#24304c] text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
               >
                 {copiedDossier ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">COPIED</span>
+                    <span className="text-emerald-400 font-semibold">Copied</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>COPY DOSSIER</span>
+                    <span>Copy Dossier</span>
                   </>
                 )}
               </button>
               <button
                 onClick={() => setAiDossier(null)}
-                className="p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.05] rounded transition-colors"
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          <div className="bg-[#08090d] border border-[#1e2433] rounded p-4 font-mono text-xs text-zinc-200 whitespace-pre-wrap leading-relaxed max-h-[500px] overflow-y-auto scrollbar-thin">
+          <div className="bg-[#0e121a] border border-[#1b2336] rounded-lg p-4 text-xs text-slate-200 whitespace-pre-wrap leading-relaxed max-h-[500px] overflow-y-auto">
             {aiDossier}
           </div>
 
-          <div className="mt-3 pt-2 border-t border-[#1e2433] flex items-center justify-between font-mono text-[10px] text-zinc-500">
-            <span className="flex items-center gap-1 text-emerald-400">
-              <ShieldCheck className="w-3 h-3" />
-              <span>EVIDENTIARY INTEGRITY VERIFIED // DAUBERT STANDARD SECTION 702 COMPLIANT</span>
+          <div className="mt-3 pt-2 border-t border-[#1b2336] flex items-center justify-between text-xs text-slate-400">
+            <span className="flex items-center gap-1 text-emerald-400 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Evidentiary Integrity Verified &middot; Daubert Standard Compliant</span>
             </span>
-            <span>NTRO CYBER INTELLIGENCE COMMAND</span>
+            <span className="font-medium text-slate-400">Obsidian De-anonymization Suite</span>
           </div>
         </div>
       )}
 
       {aiError && (
-        <div className="bg-rose-950/30 border border-rose-800/50 rounded-lg p-3 text-xs font-mono text-rose-300 flex items-center justify-between">
-          <span>AI SYNTHESIS SERVICE ALERT: {aiError}</span>
-          <button onClick={() => setAiError(null)} className="text-rose-400 hover:text-rose-200">DISMISS</button>
+        <div className="bg-rose-950/30 border border-rose-800/50 rounded-lg p-3 text-xs text-rose-300 flex items-center justify-between">
+          <span>Notice: {aiError}</span>
+          <button onClick={() => setAiError(null)} className="text-rose-400 hover:text-rose-200 font-semibold">Dismiss</button>
         </div>
       )}
 
       {/* Dynamic Fusion Scorecard & Weight Calibration */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Composite Score Spotlight */}
-        <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5 flex flex-col justify-between">
+        <div className="surface-card rounded-xl p-5 border border-[#1e273d] flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between text-zinc-500 pb-2 border-b border-[#1e2433] mb-3">
-              <span className="font-mono text-[10px] uppercase tracking-wider">COMPOSITE ATTRIBUTION</span>
-              <span className="font-mono text-[10px] text-cyan-400">MCDA MODEL</span>
+            <div className="flex items-center justify-between pb-2 border-b border-[#1b2336] mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Composite Attribution</span>
+              <span className="text-xs font-bold text-blue-400">MCDA Model</span>
             </div>
 
             <div className="flex items-baseline gap-2 my-2">
-              <span className="text-5xl font-black font-mono text-cyan-400 tracking-tight">
+              <span className="text-4xl font-mono font-bold text-white">
                 {dynamicComposite}%
               </span>
-              <span className="text-zinc-500 text-xs font-mono">/ 100.0</span>
+              <span className="text-slate-500 text-xs">/ 100.0</span>
             </div>
 
-            <div className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold border inline-block ${currentRating.color} mb-3`}>
+            <div className={`px-2.5 py-1 rounded text-xs font-semibold border inline-block ${currentRating.color} mb-3`}>
               {currentRating.label}
             </div>
 
-            <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+            <p className="text-xs text-slate-300 leading-relaxed mb-4">
               {currentRating.desc}
             </p>
           </div>
 
-          <div className="space-y-2 pt-3 border-t border-[#1e2433] text-xs font-mono">
-            <div className="flex justify-between items-center text-zinc-400">
-              <span className="flex items-center gap-1.5 text-amber-400">
-                <Server className="w-3.5 h-3.5" /> M1: Infrastructure:
+          <div className="space-y-2 pt-3 border-t border-[#1b2336] text-xs">
+            <div className="flex justify-between items-center text-slate-400">
+              <span className="flex items-center gap-1.5 text-slate-200 font-medium">
+                <Server className="w-3.5 h-3.5 text-blue-400" /> Infrastructure:
               </span>
-              <span>{selectedCase.scores.infrastructure}% &times; {(normInfra * 100).toFixed(0)}% = <strong>{(selectedCase.scores.infrastructure * normInfra).toFixed(1)} pts</strong></span>
+              <span className="font-mono">{selectedCase.scores.infrastructure}% &times; {(normInfra * 100).toFixed(0)}% = <strong className="text-white">{(selectedCase.scores.infrastructure * normInfra).toFixed(1)} pts</strong></span>
             </div>
-            <div className="flex justify-between items-center text-zinc-400">
-              <span className="flex items-center gap-1.5 text-emerald-400">
-                <Network className="w-3.5 h-3.5" /> M2: Entity Graph:
+            <div className="flex justify-between items-center text-slate-400">
+              <span className="flex items-center gap-1.5 text-slate-200 font-medium">
+                <Network className="w-3.5 h-3.5 text-emerald-400" /> Entity Graph:
               </span>
-              <span>{selectedCase.scores.entityGraph}% &times; {(normGraph * 100).toFixed(0)}% = <strong>{(selectedCase.scores.entityGraph * normGraph).toFixed(1)} pts</strong></span>
+              <span className="font-mono">{selectedCase.scores.entityGraph}% &times; {(normGraph * 100).toFixed(0)}% = <strong className="text-white">{(selectedCase.scores.entityGraph * normGraph).toFixed(1)} pts</strong></span>
             </div>
-            <div className="flex justify-between items-center text-zinc-400">
-              <span className="flex items-center gap-1.5 text-purple-400">
-                <Cpu className="w-3.5 h-3.5" /> M3: Stylometry:
+            <div className="flex justify-between items-center text-slate-400">
+              <span className="flex items-center gap-1.5 text-slate-200 font-medium">
+                <Cpu className="w-3.5 h-3.5 text-purple-400" /> Stylometry:
               </span>
-              <span>{selectedCase.scores.stylometry}% &times; {(normStylo * 100).toFixed(0)}% = <strong>{(selectedCase.scores.stylometry * normStylo).toFixed(1)} pts</strong></span>
+              <span className="font-mono">{selectedCase.scores.stylometry}% &times; {(normStylo * 100).toFixed(0)}% = <strong className="text-white">{(selectedCase.scores.stylometry * normStylo).toFixed(1)} pts</strong></span>
             </div>
           </div>
         </div>
 
         {/* Signal Weight Calibration Sliders */}
-        <div className="lg:col-span-2 bg-[#0d1117] border border-[#1e2433] rounded-lg p-5 flex flex-col justify-between">
+        <div className="lg:col-span-2 surface-card rounded-xl p-5 border border-[#1e273d] flex flex-col justify-between">
           <div>
-            <div className="flex flex-wrap items-center justify-between pb-3 border-b border-[#1e2433] mb-4 gap-2">
+            <div className="flex flex-wrap items-center justify-between pb-3 border-b border-[#1b2336] mb-4 gap-2">
               <div className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                  Telemetry Layer Sensitivity &amp; Weight Calibration
+                <Sliders className="w-4 h-4 text-blue-400" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                  Telemetry Layer Weight Sensitivity
                 </h3>
               </div>
 
               {/* Presets */}
               <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[10px] text-zinc-500">PRESETS:</span>
+                <span className="text-xs text-slate-400 mr-1 font-medium">Presets:</span>
                 <button
                   onClick={() => applyPreset('daubert')}
-                  className="px-2 py-0.5 rounded bg-[#111622] hover:bg-[#161d2d] border border-[#1e2433] text-zinc-300 hover:text-white font-mono text-[10px] transition-colors"
+                  className="px-2.5 py-1 rounded-md bg-[#0e121a] hover:bg-[#161c2c] border border-[#1b2336] text-slate-300 hover:text-white text-xs transition-colors"
                 >
-                  DAUBERT (45/35/20)
+                  Daubert (45/35/20)
                 </button>
                 <button
                   onClick={() => applyPreset('balanced')}
-                  className="px-2 py-0.5 rounded bg-[#111622] hover:bg-[#161d2d] border border-[#1e2433] text-zinc-300 hover:text-white font-mono text-[10px] transition-colors"
+                  className="px-2.5 py-1 rounded-md bg-[#0e121a] hover:bg-[#161c2c] border border-[#1b2336] text-slate-300 hover:text-white text-xs transition-colors"
                 >
-                  BALANCED (40/35/25)
+                  Balanced (40/35/25)
                 </button>
                 <button
                   onClick={() => applyPreset('linguistic')}
-                  className="px-2 py-0.5 rounded bg-[#111622] hover:bg-[#161d2d] border border-[#1e2433] text-zinc-300 hover:text-white font-mono text-[10px] transition-colors"
+                  className="px-2.5 py-1 rounded-md bg-[#0e121a] hover:bg-[#161c2c] border border-[#1b2336] text-slate-300 hover:text-white text-xs transition-colors"
                 >
-                  REBRAND (25/35/40)
+                  Rebrand Focus (25/35/40)
                 </button>
               </div>
             </div>
 
-            <div className="space-y-4 font-mono">
+            <div className="space-y-4">
               {/* Weight 1: Infrastructure */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-amber-400 font-semibold flex items-center gap-1.5">
-                    <span>M1: INFRASTRUCTURE RECONNAISSANCE</span>
+                  <span className="text-slate-200 font-semibold flex items-center gap-1.5">
+                    <span>1. Infrastructure Reconnaissance</span>
                   </span>
-                  <span className="text-zinc-300 text-xs">{(normInfra * 100).toFixed(0)}% (w₁ = {normInfra.toFixed(3)})</span>
+                  <span className="text-slate-300 font-mono text-xs">{(normInfra * 100).toFixed(0)}% (w₁ = {normInfra.toFixed(3)})</span>
                 </div>
                 <input
                   type="range"
@@ -363,9 +356,9 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
                   max="70"
                   value={wInfra}
                   onChange={(e) => setWInfra(Number(e.target.value))}
-                  className="w-full accent-amber-400 cursor-pointer h-1.5 bg-[#08090d] rounded-lg"
+                  className="w-full accent-blue-500 cursor-pointer h-1.5 bg-[#0e121a] rounded-lg"
                 />
-                <p className="text-[10px] text-zinc-500 mt-1 font-sans">
+                <p className="text-[11px] text-slate-400 mt-1">
                   Higher weight allocated when tangible Apache /status disclosures or TLS SHA-256 certificate reuse occurs.
                 </p>
               </div>
@@ -373,10 +366,10 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
               {/* Weight 2: Entity Graph */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
-                    <span>M2: CRYPTOGRAPHIC ENTITY GRAPH</span>
+                  <span className="text-slate-200 font-semibold flex items-center gap-1.5">
+                    <span>2. Cryptographic Entity Graph</span>
                   </span>
-                  <span className="text-zinc-300 text-xs">{(normGraph * 100).toFixed(0)}% (w₂ = {normGraph.toFixed(3)})</span>
+                  <span className="text-slate-300 font-mono text-xs">{(normGraph * 100).toFixed(0)}% (w₂ = {normGraph.toFixed(3)})</span>
                 </div>
                 <input
                   type="range"
@@ -384,9 +377,9 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
                   max="70"
                   value={wGraph}
                   onChange={(e) => setWGraph(Number(e.target.value))}
-                  className="w-full accent-emerald-400 cursor-pointer h-1.5 bg-[#08090d] rounded-lg"
+                  className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-[#0e121a] rounded-lg"
                 />
-                <p className="text-[10px] text-zinc-500 mt-1 font-sans">
+                <p className="text-[11px] text-slate-400 mt-1">
                   Reflects 4096-bit RSA PGP key fingerprint overlaps and UTXO co-spend transaction clustering.
                 </p>
               </div>
@@ -394,10 +387,10 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
               {/* Weight 3: Stylometry */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-purple-400 font-semibold flex items-center gap-1.5">
-                    <span>M3: LINGUISTIC STYLOMETRIC DISCRIMINATOR</span>
+                  <span className="text-slate-200 font-semibold flex items-center gap-1.5">
+                    <span>3. Linguistic Stylometric Discriminator</span>
                   </span>
-                  <span className="text-zinc-300 text-xs">{(normStylo * 100).toFixed(0)}% (w₃ = {normStylo.toFixed(3)})</span>
+                  <span className="text-slate-300 font-mono text-xs">{(normStylo * 100).toFixed(0)}% (w₃ = {normStylo.toFixed(3)})</span>
                 </div>
                 <input
                   type="range"
@@ -405,41 +398,41 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
                   max="50"
                   value={wStylo}
                   onChange={(e) => setWStylo(Number(e.target.value))}
-                  className="w-full accent-purple-400 cursor-pointer h-1.5 bg-[#08090d] rounded-lg"
+                  className="w-full accent-purple-500 cursor-pointer h-1.5 bg-[#0e121a] rounded-lg"
                 />
-                <p className="text-[10px] text-zinc-500 mt-1 font-sans">
+                <p className="text-[11px] text-slate-400 mt-1">
                   Calculates Mosteller-Wallace function-word frequencies to connect rebranded seller identities.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#1e2433] flex items-center justify-between font-mono text-[10px]">
-            <span className="text-zinc-500">
-              CORROBORATION DIVERSITY: <strong className="text-emerald-400">3 OF 3 ACTIVE PILLARS</strong>
+          <div className="mt-4 pt-3 border-t border-[#1b2336] flex items-center justify-between text-xs">
+            <span className="text-slate-400">
+              Signal Diversity: <strong className="text-emerald-400">3 of 3 Active Pillars</strong>
             </span>
             <button
               onClick={() => onNavigateTab('timeline')}
-              className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
+              className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-medium"
             >
-              <span>TRACE CHRONOLOGICAL OPSEC SLIPS</span>
-              <ArrowRight className="w-3 h-3" />
+              <span>View Investigation Timeline</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Explainable Attribution Breakdown Table (Chain of Custody) */}
-      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5">
-        <div className="flex items-center justify-between pb-3 border-b border-[#1e2433] mb-4">
+      <div className="surface-card rounded-xl p-5 border border-[#1e273d]">
+        <div className="flex items-center justify-between pb-3 border-b border-[#1b2336] mb-4">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-              Evidentiary Audit Ledger &amp; Signal Contribution Breakdown
+            <Layers className="w-4 h-4 text-blue-400" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+              Evidentiary Audit Ledger &amp; Signal Contribution
             </h3>
           </div>
-          <span className="font-mono text-[10px] text-zinc-500">
-            SHOWING {signals.length} INDEPENDENT TELEMETRY SIGNALS
+          <span className="text-xs text-slate-400 font-medium">
+            {signals.length} Independent Telemetry Signals
           </span>
         </div>
 
@@ -447,40 +440,40 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
           {signals.map((sig, idx) => (
             <div
               key={idx}
-              className="bg-[#08090d] p-4 rounded border border-[#1e2433] hover:border-zinc-700 transition-colors"
+              className="bg-[#0e121a] p-4 rounded-xl border border-[#1b2336] hover:border-slate-600 transition-colors"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#1e2433] mb-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#1b2336] mb-2.5">
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                     sig.category === 'INFRASTRUCTURE'
-                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                      ? 'bg-blue-950/60 text-blue-300 border border-blue-800'
                       : sig.category === 'ENTITY_GRAPH'
-                      ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-purple-500/10 text-purple-300 border border-purple-500/30'
+                      ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800'
+                      : 'bg-purple-950/60 text-purple-300 border border-purple-800'
                   }`}>
                     {sig.category}
                   </span>
-                  <span className="font-mono text-xs font-bold text-white">
+                  <span className="text-xs font-bold text-white">
                     {sig.signalName}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 font-mono text-xs">
-                  <span className="text-zinc-500">Raw Confidence: <strong className="text-zinc-200">{sig.rawScore}%</strong></span>
-                  <span className="text-cyan-400 font-bold bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-800/40">
-                    +{sig.weightedScore.toFixed(1)} MCDA PTS
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="text-slate-400">Confidence: <strong className="text-slate-200 font-mono">{sig.rawScore}%</strong></span>
+                  <span className="text-blue-300 font-bold bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800 font-mono">
+                    +{sig.weightedScore.toFixed(1)} pts
                   </span>
                 </div>
               </div>
 
-              <p className="text-xs text-zinc-300 mb-2.5 leading-relaxed">
+              <p className="text-xs text-slate-300 mb-2.5 leading-relaxed">
                 {sig.evidenceSummary}
               </p>
 
-              <div className="text-xs font-mono text-zinc-400 bg-[#0d1117] p-2.5 rounded border border-[#1e2433] flex items-start gap-2">
-                <Fingerprint className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-slate-400 bg-[#090c12] p-2.5 rounded-lg border border-[#1b2336] flex items-start gap-2">
+                <Fingerprint className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-cyan-400 font-semibold mr-1.5">CRYPTOGRAPHIC EVIDENCE PROOF:</span>
-                  <span className="text-zinc-200 break-all">{sig.verifiableProof}</span>
+                  <span className="text-blue-400 font-semibold mr-1.5">Cryptographic Proof:</span>
+                  <span className="text-slate-200 font-mono text-[11px] break-all">{sig.verifiableProof}</span>
                 </div>
               </div>
             </div>

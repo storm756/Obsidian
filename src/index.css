@@ -3,63 +3,133 @@
 :root {
   color-scheme: dark;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #08090d;
+  background: #090b10;
+
+  /* Obsidian Enterprise UI Architecture */
+  --bg-canvas: #090b10;
+  --surface-header: #0d1118;
+  --surface-panel: #111622;
+  --surface-card: #141a29;
+  --surface-elevated: #1a2235;
+  --surface-hover: #1f2a40;
+
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: #1f273b;
+  --border-strong: #2a354f;
+
+  --color-primary: #3b82f6;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-success: #10b981;
 }
 
 @layer base {
-  * { box-sizing: border-box; }
+  * { 
+    box-sizing: border-box; 
+  }
 
   body {
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
-    background: #08090d;
-    color: #cbd5e1;
+    background: #090b10;
+    color: #e2e8f0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  code, pre, kbd, samp {
-    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  code, pre, kbd, samp, .font-mono {
+    font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
   }
 
-  button, select, input, textarea { font: inherit; }
-  button { cursor: pointer; }
+  button, select, input, textarea { 
+    font: inherit; 
+  }
+  button { 
+    cursor: pointer; 
+  }
 }
 
-/* Tactical Background Grid Pattern */
+/* Clean, Matte Enterprise Surface Classes (No neon grids, no halos) */
 .bg-tactical-grid {
-  background-color: #08090d;
-  background-image: 
-    linear-gradient(rgba(30, 41, 59, 0.2) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30, 41, 59, 0.2) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-color: #090b10;
+  /* Extremely subtle vignette for depth, zero grid lines */
+  background-image: radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.2) 0%, transparent 75%);
 }
 
-/* High-contrast precision borders */
+.surface-panel {
+  background-color: #111622;
+  border: 1px solid #1c2436;
+}
+
+.surface-card {
+  background-color: #141a29;
+  border: 1px solid #1e273d;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+}
+
+.surface-elevated {
+  background-color: #182033;
+  border: 1px solid #24304c;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+}
+
+/* Subtle hairline borders */
 .border-tactical {
-  border-color: #1e2433;
+  border: 1px solid #1e273d;
 }
 
-.bg-tactical-card {
-  background: #0e111a;
-  border: 1px solid #1e2433;
+.border-tactical-highlight {
+  border: 1px solid #3b82f6;
 }
 
-.bg-tactical-surface {
-  background: #121624;
+/* Restrained accent utilities (clean, no neon blur) */
+.glow-cyan {
+  border-color: #0284c7;
+}
+
+.glow-rose {
+  border-color: #ef4444;
+}
+
+.glow-emerald {
+  border-color: #10b981;
+}
+
+.glow-amber {
+  border-color: #f59e0b;
 }
 
 /* Monospace telemetry data tag */
 .telemetry-chip {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
 }
 
-::selection { background: #0284c7; color: #f8fafc; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #08090d; }
-::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #334155; }
+/* Clean text selection & refined slim scrollbars */
+::selection { 
+  background: #2563eb; 
+  color: #ffffff; 
+}
+
+::-webkit-scrollbar { 
+  width: 6px; 
+  height: 6px; 
+}
+
+::-webkit-scrollbar-track { 
+  background: #090b10; 
+}
+
+::-webkit-scrollbar-thumb { 
+  background: #1e273d; 
+  border-radius: 3px; 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+  background: #2a354f; 
+}

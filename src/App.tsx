@@ -214,7 +214,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#08090d] bg-tactical-grid text-slate-300 flex flex-col font-sans selection:bg-cyan-900 selection:text-cyan-100">
+    <div className="min-h-screen bg-[#090b10] text-slate-200 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
 
       {/* Top Main Navigation Header */}
       <Header
@@ -229,7 +229,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5">
 
         {activeTab === 'overview' && (
           <CaseOverview
@@ -295,37 +295,34 @@ export default function App() {
       </main>
 
       {/* Operational Status Footer */}
-      <footer className="mt-auto border-t border-[#1a202c] bg-[#06070a] py-2.5 px-4 sm:px-6 text-[11px] font-mono text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="mt-auto border-t border-[#182030] bg-[#0c0f16] py-2.5 px-4 sm:px-6 text-xs text-slate-400">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-slate-300 font-semibold uppercase tracking-wider">
-              OBSIDIAN ATTRIBUTION ENGINE
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="text-slate-300 font-medium">
+              Obsidian Attribution Engine
             </span>
             <span className="text-slate-700">&bull;</span>
-            <span className="text-emerald-400">
-              TOR SOCKS5 :9050 PROXY VERIFIED
+            <span className="text-slate-300 font-mono text-[11px]">
+              Tor SOCKS5 :9050 Connected
             </span>
             <span className="text-slate-700">&bull;</span>
             <span className="text-slate-400">
-              7 SANDBOXED ONION SERVICES
+              7 Sandboxed Hidden Services
             </span>
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap text-slate-400">
-            <span className="text-slate-500">
-              CASE: <strong className="text-cyan-400">{selectedCase.codename}</strong>
+          <div className="flex items-center gap-3 flex-wrap text-slate-400">
+            <span>
+              Active Target: <strong className="text-slate-200">{selectedCase.codename}</strong>
             </span>
             <span className="text-slate-700">&bull;</span>
-            <span className="text-slate-500">
-              EVIDENCE INTEGRITY: <strong className="text-emerald-400">SHA-256 TAMPER-PROOF</strong>
+            <span>
+              Integrity: <strong className="text-emerald-400 font-medium">SHA-256 Verified</strong>
             </span>
             <span className="text-slate-700">&bull;</span>
-            <span className="text-slate-500">
-              NTRO PS-26151 · WSL2
+            <span>
+              Air-Gapped Research Testbed
             </span>
           </div>
         </div>

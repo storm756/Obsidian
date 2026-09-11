@@ -709,103 +709,103 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
   }, [graphData, filterType, searchQuery, pathfindingActive, highlightedPath, selectedNode, computeFiltered]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Module Overview Header */}
-      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="surface-card rounded-xl p-5 border border-[#1e273d] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[10px] font-mono font-bold uppercase tracking-wider">
-              MODULE 02 // ENTITY GRAPH CLUSTER
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="px-2 py-0.5 rounded bg-blue-950/60 text-blue-400 border border-blue-800 text-xs font-semibold">
+              Relational Intelligence
             </span>
-            <span className="font-mono text-[10px] text-zinc-500">
-              NEO4J REPLICA · 4096-BIT RSA PGP · UTXO CO-SPEND
+            <span className="text-xs text-slate-400">
+              Disjoint-Set Clustering &middot; 4096-bit RSA PGP &middot; UTXO Co-Spend
             </span>
             {isLiveGraph ? (
-              <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase tracking-wide">
-                Live Scan Result
+              <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800 text-[11px] font-medium">
+                Live Scan Stream
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold uppercase tracking-wide">
-                Simulated — Not a Live Scan
+              <span className="px-2 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800 text-[11px] font-medium">
+                Baseline Case
               </span>
             )}
           </div>
-          <h2 className="text-base font-semibold text-white tracking-tight flex items-center gap-2">
-            <span>Cryptographic Relationship &amp; Entity Correlation Graph</span>
+          <h2 className="text-xl font-bold text-white tracking-tight">
+            Cryptographic Relationship &amp; Entity Correlation Graph
           </h2>
-          <p className="text-xs text-zinc-400 max-w-3xl leading-relaxed mt-1">
-            Correlates handles, 4096-bit PGP public key fingerprints, cryptocurrency wallets (Bitcoin &amp; Monero), marketplace listings, and Dread dispute forums into a multi-hop evidence relationship graph.
+          <p className="text-xs text-slate-300 max-w-3xl leading-relaxed mt-1">
+            Correlates handles, 4096-bit PGP public key fingerprints, cryptocurrency wallets (Bitcoin &amp; Monero), marketplace listings, and darknet dispute forums into a multi-hop evidence relationship graph.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowConsole(!showConsole)}
-            className={`px-3 py-2 rounded text-xs font-mono font-semibold transition-colors flex items-center gap-1.5 border ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 border ${
               showConsole
-                ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
-                : 'bg-[#08090d] hover:bg-[#111622] text-zinc-300 border-[#1e2433]'
+                ? 'bg-blue-950/60 text-blue-300 border-blue-800'
+                : 'bg-[#121622] hover:bg-[#181f2f] text-slate-300 border-[#222c42]'
             }`}
             title="Toggle Query Console"
           >
-            <Database className="w-3.5 h-3.5 text-cyan-400" />
-            <span>QUERY CONSOLE</span>
+            <Database className="w-3.5 h-3.5 text-blue-400" />
+            <span>Query Console</span>
             {showConsole ? (
-              <ChevronUp className="w-3 h-3 text-cyan-400" />
+              <ChevronUp className="w-3.5 h-3.5 text-blue-400" />
             ) : (
-              <ChevronDown className="w-3 h-3 text-zinc-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             )}
           </button>
 
           <button
             onClick={handleTraceEvidencePath}
-            className="px-3.5 py-2 rounded bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs transition-colors flex items-center gap-1.5 border border-emerald-300/40 shadow-sm"
+            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm"
           >
-            <Route className="w-4 h-4 fill-black" />
-            <span>TRACE SHORTEST PATH</span>
+            <Route className="w-4 h-4" />
+            <span>Trace Origin Path</span>
           </button>
           
           <button
             onClick={handleResetGraph}
-            className="p-2 rounded bg-[#08090d] hover:bg-[#111622] text-zinc-400 hover:text-white border border-[#1e2433] transition-colors"
-            title="Reset Graph"
+            className="p-2 rounded-lg bg-[#121622] hover:bg-[#181f2f] text-slate-400 hover:text-white border border-[#222c42] transition-colors"
+            title="Reset Graph Position"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Graph Filter & Search Bar */}
-      <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-[10px] uppercase text-zinc-500 flex items-center gap-1">
+      <div className="surface-card rounded-xl px-4 py-3 border border-[#1e273d] flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-slate-400 flex items-center gap-1 font-medium mr-1">
             <Filter className="w-3.5 h-3.5" />
-            <span>FILTER:</span>
+            <span>Filter:</span>
           </span>
           {['all', 'actor', 'origin_ip', 'infrastructure', 'marketplace', 'forum', 'pgp', 'wallet'].map((type) => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
-              className={`px-2.5 py-1 rounded font-mono text-[10px] font-semibold uppercase transition-colors border ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium capitalize transition-colors ${
                 filterType === type
-                  ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
-                  : 'bg-[#08090d] text-zinc-400 border-[#1e2433] hover:border-zinc-500 hover:text-zinc-200'
+                  ? 'bg-blue-950/60 text-blue-300 border border-blue-800'
+                  : 'bg-[#101420] text-slate-400 border border-[#1e273d] hover:border-slate-600 hover:text-slate-200'
               }`}
             >
-              {type === 'origin_ip' ? 'Origin IP' : type}
+              {type === 'origin_ip' ? 'Origin IP' : type === 'all' ? 'All Entities' : type}
             </button>
           ))}
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search node or key..."
-              className="w-full bg-[#08090d] border border-[#1e2433] rounded pl-8 pr-3 py-1.5 font-mono text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 transition-colors"
+              placeholder="Search entity, handle, or key..."
+              className="w-full bg-[#0e121a] border border-[#1b2336] rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors placeholder:text-slate-500"
             />
           </div>
         </div>
@@ -816,15 +816,15 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
         {/* Canvas Area */}
         <div 
           ref={containerRef}
-          className="lg:col-span-3 bg-[#08090d] border border-[#1e2433] rounded-lg relative overflow-hidden h-[550px]"
+          className="lg:col-span-3 surface-card rounded-xl border border-[#1e273d] relative overflow-hidden h-[560px] bg-[#0c0f17]"
         >
           {pathfindingActive && (
-            <div className="absolute top-3 left-3 z-10 bg-[#08090d]/95 border border-amber-500/40 rounded px-3 py-1.5 text-xs text-amber-300 font-mono flex items-center gap-2 shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>PATHFINDER ACTIVE: {highlightedPath.length} HOPS TO CLEARNET ORIGIN</span>
+            <div className="absolute top-3 left-3 z-10 bg-[#121724] border border-blue-600/60 rounded-lg px-3 py-1.5 text-xs text-blue-200 flex items-center gap-2 shadow-md">
+              <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+              <span className="font-medium">Pathfinder Active: {highlightedPath.length} hops to clearnet origin</span>
               <button
                 onClick={() => setPathfindingActive(false)}
-                className="ml-2 text-zinc-500 hover:text-white"
+                className="ml-2 text-slate-400 hover:text-white"
               >
                 &times;
               </button>
@@ -832,24 +832,24 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
           )}
 
           {/* Quick Zoom Controls */}
-          <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-[#121216]/80 border border-white/[0.08] backdrop-blur p-1 rounded-xl shadow-sm">
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-[#0a0e16]/90 border border-white/[0.08] backdrop-blur p-1 rounded-lg shadow-sm">
             <button
               onClick={handleZoomIn}
-              className="p-1.5 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-md hover:bg-white/[0.08] text-slate-400 hover:text-white transition-colors"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={handleZoomOut}
-              className="p-1.5 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-md hover:bg-white/[0.08] text-slate-400 hover:text-white transition-colors"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={handleFit}
-              className="p-1.5 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-md hover:bg-white/[0.08] text-slate-400 hover:text-white transition-colors"
               title="Reset Zoom"
             >
               <Maximize2 className="w-3.5 h-3.5" />
@@ -857,35 +857,35 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
           </div>
 
           {/* Legend Overlay */}
-          <div className="absolute bottom-3 left-3 z-10 bg-[#121216]/90 border border-white/[0.08] backdrop-blur rounded-xl p-3 text-xs space-y-1.5 hidden sm:block shadow-sm">
-            <div className="text-[10px] text-zinc-500 uppercase font-semibold mb-1">Entity Legend</div>
+          <div className="absolute bottom-3 left-3 z-10 bg-[#070a10]/95 border border-[#161e30] backdrop-blur rounded-lg p-3 text-xs space-y-1.5 hidden sm:block shadow-sm">
+            <div className="text-[9px] font-mono text-slate-500 uppercase font-semibold tracking-wider mb-1">Entity Legend</div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-              <span className="text-zinc-300">Threat Actor Persona</span>
+              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+              <span className="text-slate-300 font-mono text-[11px]">Threat Actor Persona</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <span className="text-zinc-300">Darknet Marketplace</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="text-slate-300 font-mono text-[11px]">Darknet Marketplace</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-              <span className="text-zinc-300">Discussion / Vouch Forum</span>
+              <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+              <span className="text-slate-300 font-mono text-[11px]">Discussion / Vouch Forum</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span className="text-zinc-300">PGP Key Fingerprint</span>
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span className="text-slate-300 font-mono text-[11px]">PGP Key Fingerprint</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
-              <span className="text-zinc-300">Crypto Wallet Address</span>
+              <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+              <span className="text-slate-300 font-mono text-[11px]">Crypto Wallet Address</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
-              <span className="text-zinc-300">Tor Hidden Service Infrastructure</span>
+              <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+              <span className="text-slate-300 font-mono text-[11px]">Tor Hidden Service Infra</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-              <span className="text-zinc-300">Attributed Clearnet Origin IP</span>
+              <span className="w-2 h-2 rounded-full bg-rose-600"></span>
+              <span className="text-slate-300 font-mono text-[11px]">Attributed Clearnet Origin IP</span>
             </div>
           </div>
 
@@ -896,55 +896,55 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
         </div>
 
         {/* Node Details Inspector Sidebar */}
-        <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-4 flex flex-col justify-between">
+        <div className="surface-card rounded-xl p-4 border border-[#1e273d] flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-[#1e1e24] mb-3">
-              <div className="text-xs font-mono text-gray-400 flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-cyan-400" />
+            <div className="flex items-center justify-between pb-3 border-b border-[#1b2336] mb-3">
+              <div className="text-xs text-white font-semibold flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-blue-400" />
                 <span>Entity Inspector</span>
               </div>
-              <span className="text-[10px] text-gray-500 font-mono uppercase">
+              <span className="text-[10px] text-slate-400 uppercase font-medium">
                 {selectedNode ? selectedNode.type : 'Select Node'}
               </span>
             </div>
 
             {selectedNode ? (
-              <div className="space-y-3 font-mono text-xs">
+              <div className="space-y-3 text-xs">
                 <div>
-                  <div className="text-[10px] text-gray-500 uppercase">IDENTIFIER LABEL</div>
-                  <div className="text-sm font-bold text-white break-words mt-0.5">
+                  <div className="text-[11px] text-slate-400 font-medium">Identifier</div>
+                  <div className="text-sm font-semibold text-white break-words mt-0.5">
                     {selectedNode.label}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[10px] text-gray-500 uppercase">ENTITY CLASSIFICATION</div>
-                  <div className="inline-block px-2 py-0.5 rounded text-[11px] font-bold mt-0.5 uppercase" style={{ backgroundColor: `${getNodeColor(selectedNode.type)}25`, color: getNodeColor(selectedNode.type) }}>
+                  <div className="text-[11px] text-slate-400 font-medium">Classification</div>
+                  <div className="inline-block px-2 py-0.5 rounded text-xs font-semibold mt-0.5 uppercase" style={{ backgroundColor: `${getNodeColor(selectedNode.type)}25`, color: getNodeColor(selectedNode.type) }}>
                     {selectedNode.type}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#1e1e24]">
-                  <div className="text-[10px] text-gray-500 uppercase mb-1">PROPERTIES &amp; TELEMETRY</div>
-                  <div className="bg-[#0c0c0e] p-2.5 rounded border border-[#1e1e24] space-y-1 text-[11px]">
+                <div className="pt-2 border-t border-[#1b2336]">
+                  <div className="text-[11px] text-slate-400 mb-1 font-medium">Properties &amp; Telemetry</div>
+                  <div className="bg-[#0e121a] p-2.5 rounded-lg border border-[#1b2336] space-y-1 font-mono text-[11px]">
                     {Object.entries(selectedNode.properties || {}).map(([k, v]) => (
                       <div key={k} className="flex justify-between gap-2">
-                        <span className="text-gray-400 capitalize">{k}:</span>
-                        <span className="text-gray-200 truncate text-right font-medium">{String(v)}</span>
+                        <span className="text-slate-400 capitalize">{k}:</span>
+                        <span className="text-slate-200 truncate text-right">{String(v)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#1e1e24]">
-                  <div className="text-[10px] text-gray-500 uppercase mb-1">CORROBORATING EVIDENCE</div>
-                  <p className="text-[11px] text-gray-300 leading-relaxed">
+                <div className="pt-2 border-t border-[#1b2336]">
+                  <div className="text-[11px] text-slate-400 mb-1 font-medium">Corroborating Evidence</div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
                     Cryptographic signature and multi-market transaction logs confirm association with {selectedCase.primaryHandle}.
                   </p>
                 </div>
 
                 {/* Quick query button for this entity */}
-                <div className="pt-2 border-t border-[#1e1e24]">
+                <div className="pt-2 border-t border-[#1b2336]">
                   <button
                     onClick={() => {
                       const query = `MATCH (n {id: "${selectedNode.id}"})-[r]-(neighbor)\nRETURN n, r, neighbor`;
@@ -952,33 +952,33 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
                       setShowConsole(true);
                       handleExecuteCypher(query);
                     }}
-                    className="w-full py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/25 text-[11px] font-mono flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full py-1.5 rounded-lg bg-blue-950/60 hover:bg-blue-900/60 text-blue-300 border border-blue-800 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    <Terminal className="w-3 h-3 text-cyan-400" />
+                    <Terminal className="w-3.5 h-3.5 text-blue-400" />
                     <span>Query This Entity</span>
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
-                <Network className="w-8 h-8 mx-auto mb-2 text-gray-600" />
+              <div className="text-center py-12 text-slate-500">
+                <Network className="w-8 h-8 mx-auto mb-2 text-slate-600" />
                 <p className="text-xs">Click any node in the graph to inspect cryptographic attributes and multi-hop relationships.</p>
               </div>
             )}
           </div>
 
-          <div className="pt-4 border-t border-[#1e1e24]">
-            <div className="text-[11px] font-mono text-gray-400 flex items-center justify-between">
-              <span>GRAPH STATS</span>
-              <span className={`text-[10px] flex items-center gap-1 ${isLiveGraph ? 'text-emerald-400' : 'text-amber-400'}`}>
-                <Radio className={`w-2.5 h-2.5 animate-pulse ${isLiveGraph ? 'text-emerald-400' : 'text-amber-400'}`} />
-                <span>{isLiveGraph ? 'Live Data' : 'Simulated Data'}</span>
+          <div className="pt-3 border-t border-[#1b2336] mt-4">
+            <div className="text-xs text-slate-400 flex items-center justify-between">
+              <span>Graph Telemetry</span>
+              <span className={`text-[11px] font-medium flex items-center gap-1 ${isLiveGraph ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <Radio className="w-2.5 h-2.5" />
+                <span>{isLiveGraph ? 'Live Feed' : 'Baseline'}</span>
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs font-mono text-gray-300 mt-1">
+            <div className="flex items-center justify-between text-xs text-slate-300 mt-1 font-mono">
               <span>Nodes: {graphData.nodes.length}</span>
               <span>Edges: {graphData.links.length}</span>
-              <span className="text-emerald-400">High-Conf: {matchPercentage}%</span>
+              <span className="text-emerald-400">Match: {matchPercentage}%</span>
             </div>
           </div>
         </div>
@@ -986,23 +986,22 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
 
       {/* Query Console & Graph Analytics Workbench */}
       {showConsole && (
-        <div className="bg-[#0d1117] border border-[#1e2433] rounded-lg p-5 space-y-4">
+        <div className="surface-card rounded-xl p-5 border border-[#1e273d] space-y-4">
           {/* Console Header Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1e2433]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1b2336]">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <div className="p-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300">
+              <div className="p-1.5 rounded-lg bg-blue-950/60 border border-blue-800 text-blue-400">
                 <Database className="w-4 h-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold text-white tracking-tight">Graph Query Workbench</h3>
-                  <span className="px-2 py-0.2 rounded text-[10px] font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                  <span className="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-300 border border-blue-800 font-semibold">
                     Local Backend
                   </span>
                 </div>
-                <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
-                  Cypher-style syntax &bull; executed against Obsidian's local exact-match graph store
+                <div className="text-xs text-slate-400 mt-0.5">
+                  Cypher query syntax &bull; executed against Obsidian's relational entity store
                 </div>
               </div>
             </div>
@@ -1010,16 +1009,16 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setShowCqlModal(!showCqlModal)}
-                className="px-3 py-1.5 rounded-xl bg-[#0b0b0e] hover:bg-white/[0.05] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-mono font-medium transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg bg-[#0e121a] hover:bg-[#161c2c] text-slate-300 hover:text-white border border-[#1b2336] text-xs font-medium transition-colors flex items-center gap-1.5"
                 title="View &amp; Export Cypher CREATE script"
               >
-                <Download className="w-3.5 h-3.5 text-cyan-400" />
+                <Download className="w-3.5 h-3.5 text-blue-400" />
                 <span>Export .cql Script</span>
               </button>
               
               <button
                 onClick={() => handleCopyCypher(cypherQuery)}
-                className="px-3 py-1.5 rounded-xl bg-[#0b0b0e] hover:bg-white/[0.05] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-mono font-medium transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg bg-[#0e121a] hover:bg-[#161c2c] text-slate-300 hover:text-white border border-[#1b2336] text-xs font-medium transition-colors flex items-center gap-1.5"
                 title="Copy current query"
               >
                 {copiedQuery ? (
@@ -1029,7 +1028,7 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                    <Copy className="w-3.5 h-3.5 text-slate-400" />
                     <span>Copy Query</span>
                   </>
                 )}
@@ -1039,8 +1038,8 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
 
           {/* Preset Queries Bar */}
           <div>
-            <div className="text-[10px] text-zinc-400 font-mono uppercase font-semibold mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-cyan-400" />
+            <div className="text-xs text-slate-400 font-medium mb-2 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
               <span>Attribution Query Templates:</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
@@ -1051,12 +1050,12 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
                     setCypherQuery(preset.query);
                     handleExecuteCypher(preset.query);
                   }}
-                  className="p-2.5 rounded-xl bg-[#0a0a0d] border border-white/[0.06] hover:border-cyan-500/40 hover:bg-[#101015] text-left transition-all group"
+                  className="p-2.5 rounded-lg bg-[#0e121a] border border-[#1b2336] hover:border-blue-500/60 hover:bg-[#121826] text-left transition-colors group"
                 >
-                  <div className="text-xs font-semibold text-zinc-200 group-hover:text-cyan-300 truncate">
+                  <div className="text-xs font-semibold text-slate-200 group-hover:text-blue-300 truncate">
                     {preset.title}
                   </div>
-                  <div className="text-[10px] text-zinc-500 truncate mt-0.5">
+                  <div className="text-[11px] text-slate-400 truncate mt-0.5">
                     {preset.description}
                   </div>
                 </button>
@@ -1065,13 +1064,13 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
           </div>
 
           {/* Interactive Query Editor */}
-          <div className="bg-[#09090b] border border-white/[0.08] rounded-xl overflow-hidden">
-            <div className="bg-[#0e0e12] px-3.5 py-1.5 border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
+          <div className="bg-[#090c12] border border-[#1b2336] rounded-lg overflow-hidden">
+            <div className="bg-[#0e121a] px-3.5 py-2 border-b border-[#1b2336] flex items-center justify-between text-xs text-slate-400">
               <div className="flex items-center gap-2">
-                <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-[11px] text-zinc-300">query.cql</span>
+                <Terminal className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-xs text-slate-300 font-medium">query.cql</span>
               </div>
-              <span className="text-[10px] text-zinc-500">Cypher-style syntax</span>
+              <span className="text-[11px] text-slate-400 font-medium">Cypher Engine</span>
             </div>
 
             <div className="p-3">
@@ -1080,65 +1079,65 @@ export const ModuleEntityGraph: React.FC<ModuleEntityGraphProps> = ({
                 onChange={(e) => setCypherQuery(e.target.value)}
                 rows={3}
                 placeholder="Enter a Cypher-style statement, e.g. MATCH (n:ThreatActor) RETURN n..."
-                className="w-full bg-transparent text-xs font-mono text-cyan-200 focus:outline-none resize-none leading-relaxed selection:bg-cyan-500/30"
+                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none resize-none leading-relaxed"
                 spellCheck={false}
               />
             </div>
 
-            <div className="bg-[#0e0e12] px-3.5 py-2 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="text-[11px] font-mono text-zinc-400 flex items-center gap-2 flex-wrap">
-                <span className="text-emerald-400 font-semibold">{cypherStats.lastExecuted}</span>
-                <span className="text-zinc-600">&bull;</span>
-                <span>Latency: <strong className="text-zinc-200">{cypherStats.executionTimeMs}ms</strong></span>
-                <span className="text-zinc-600">&bull;</span>
-                <span>Returned: <strong className="text-zinc-200">{cypherStats.recordsCount} records</strong></span>
+            <div className="bg-[#0e121a] px-3.5 py-2 border-t border-[#1b2336] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="text-xs text-slate-400 flex items-center gap-2 flex-wrap">
+                <span className="text-emerald-400 font-medium">{cypherStats.lastExecuted}</span>
+                <span className="text-slate-700">&bull;</span>
+                <span>Latency: <strong className="text-slate-200 font-mono">{cypherStats.executionTimeMs}ms</strong></span>
+                <span className="text-slate-700">&bull;</span>
+                <span>Records: <strong className="text-slate-200 font-mono">{cypherStats.recordsCount}</strong></span>
               </div>
 
               <button
                 onClick={() => handleExecuteCypher()}
-                className="px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-cyan-500/20"
+                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
               >
-                <Play className="w-3.5 h-3.5 fill-black" />
-                <span>Run Query</span>
+                <Play className="w-3.5 h-3.5" />
+                <span>Execute Query</span>
               </button>
             </div>
           </div>
 
           {/* Export Script Drawer / Modal */}
           {showCqlModal && (
-            <div className="bg-[#0a0a0d] border border-cyan-500/30 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+            <div className="bg-[#0e121a] border border-blue-800/60 rounded-xl p-4 space-y-3 shadow-lg">
+              <div className="flex items-center justify-between pb-2 border-b border-[#1b2336]">
                 <div className="flex items-center gap-2">
-                  <Download className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-bold text-white font-mono">
-                    CYPHER-STYLE EXPORT ({graphData.nodes.length} NODES &bull; {graphData.links.length} RELATIONSHIPS)
+                  <Download className="w-4 h-4 text-blue-400" />
+                  <span className="text-xs font-bold text-white">
+                    Cypher-Style Export ({graphData.nodes.length} nodes &bull; {graphData.links.length} relationships)
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCopyFullCql}
-                    className="px-2.5 py-1 rounded bg-white/[0.06] hover:bg-white/[0.12] text-xs font-mono text-zinc-300 hover:text-white flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-lg bg-[#141a28] hover:bg-[#1a2336] text-xs text-slate-300 hover:text-white flex items-center gap-1 border border-[#24304c]"
                   >
-                    {copiedCql ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                    {copiedCql ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
                     <span>{copiedCql ? 'Copied' : 'Copy All'}</span>
                   </button>
                   <button
                     onClick={handleDownloadCql}
-                    className="px-2.5 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium flex items-center gap-1"
                   >
                     <Download className="w-3 h-3" />
                     <span>Download .cql</span>
                   </button>
                   <button
                     onClick={() => setShowCqlModal(false)}
-                    className="text-zinc-500 hover:text-white text-base leading-none pl-1"
+                    className="text-slate-400 hover:text-white text-lg leading-none pl-1"
                   >
                     &times;
                   </button>
                 </div>
               </div>
 
-              <pre className="max-h-56 overflow-y-auto p-3 rounded-lg bg-[#060608] border border-white/[0.05] text-[10.5px] font-mono text-zinc-300 whitespace-pre leading-relaxed">
+              <pre className="max-h-56 overflow-y-auto p-3 rounded-lg bg-[#090c12] border border-[#1b2336] text-[11px] font-mono text-slate-300 whitespace-pre leading-relaxed">
                 {generateCypherExport()}
               </pre>
             </div>
