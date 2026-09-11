@@ -116,41 +116,6 @@ All POST scan/crawl routes accept:
 { "onion_url": "example.onion" }
 ```
 
-## Implemented Features (Completed Handover Items)
-
-All gaps originally documented in this handover have been resolved and implemented:
-
-1. **Dashboard Fully Data-Driven**:
-   - `GET /api/cases`: Dynamically groups SQLite listings into multi-alias syndicates (`SlateCourier`, `AtomVouch`, `MistralLedger`, `CryptaVault_Node1`, etc.) linked by exact shared PGP and Bitcoin wallets.
-   - `GET /api/timeline`: Chronologically reconstructs evidentiary milestones from crawl and scan timestamps.
-   - `GET /api/fusion-signals`: Generates four verifiable, explainable attribution proof points with auditable cryptographic hashes and leaked IP telemetry.
-2. **Interactive Crawl & Progress Modal**:
-   - Added header action **"Crawl Testbed"** opening `CrawlProgressModal.tsx` with live SSE/polling progress tracking (`/api/investigation-status`) and automatic dashboard refresh upon completion.
-3. **Multi-Path & Multi-Service Fixture Scanning**:
-   - Configured `tor/torrc` with **7 distinct Tor v3 Hidden Services** inside the single Docker container:
-     - `testbed`: `5ddoqqirppgbbl3rgl7octcxixxzrarvhl5v6s65ycseillxpignm6ad.onion`
-     - `market-a`: `q4fldlv4e4pscz7ng7jlpxyqntukjb6org6poihkyhjepu6yrbqx5kqd.onion`
-     - `market-b`: `76mllgkmbulwsexm6s67hhn6r4jxaycot2vqtzi4z7o3c7hrejmzqyyd.onion`
-     - `market-c`: `rxr5hr4blxejbe2fr4xbkyheaoprlbjpuken33soivrjckodhhydsnid.onion`
-     - `forum-a`: `srfx5g3rz64fpbw7e4aoles7xydevv3f4pkeenrhlz4fffr2rgxat4yd.onion`
-     - `forum-b`: `kn2tejq7fj47fra54jmfcgv2m277ltcsymtewdb2fs3wmpegt3zfevid.onion`
-     - `escrow`: `3zryvul2zmgds2t44bydfrkxjwq5nsqmqn64wijfwgyxqzi5322pn2id.onion`
-   - Added `testbed/escrow` with 5 synthetic listings and an exposed `/escrow/server-status` leaking Frankfurt origin IP `194.26.29.112`.
-   - `scanner.py` probes candidate paths (`/server-status`, `/market-a/server-status`, `/forum-b/server-status`, `/escrow/server-status`) and parses Apache worker slots and IP addresses.
-   - Port scanner parallelized using Python's `ThreadPoolExecutor` (reduces scan duration from 40s to ~2s).
-4. **Persist Evidence Provenance**:
-   - SQLite `listings` schema extended with `source_site`, `snippet`, and `content_hash` (SHA-256).
-   - Provenance hashes and source timestamps are embedded into every entity graph node and export dossier.
-5. **Reproducible Forensic Stylometry**:
-   - Implemented `backend/stylometry.py` executing deterministic NLP: function words vector cosine similarity (86 grammatical function words), punctuation cadence, Yule's Characteristic K (length-invariant vocabulary richness), and Simpson's Diversity Index.
-   - Route `POST /api/stylometry/compare` logs calculations into SQLite table `stylometry_scores`.
-   - Frontend `ModuleStylometry.tsx` syncs with the FastAPI engine and displays active engine telemetry.
-6. **Automated Verification Test Suite**:
-   - `backend/test_pipeline.py`: Runs 5 automated unit/integration tests verifying multi-onion discovery, SQLite provenance, syndicate clustering, origin IP de-cloaking, and stylometry invariance.
-7. **Production Build & Type Safety**:
-   - `npm run lint` (`tsc --noEmit`) passes with 0 errors.
-   - `npm run build` bundles the frontend SPA and Node server without errors.
-
 ---
 
 ## Live Judge Demonstration Guide
