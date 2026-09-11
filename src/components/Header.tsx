@@ -1,191 +1,271 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Clock, 
-  FileDown, 
+  Shield, 
+  Radio, 
   Network, 
-  RefreshCw, 
-  ScanSearch, 
-  Settings2, 
-  Sparkles, 
-  Waypoints, 
-  ShieldCheck, 
-  Plus, 
-  ChevronDown,
-  Layers,
-  CheckCircle2
+  Server, 
+  Scale, 
+  FileSpreadsheet, 
+  ChevronDown, 
+  Download, 
+  FileText, 
+  Code2, 
+  Table, 
+  PanelRightClose, 
+  PanelRightOpen,
+  CheckCircle2,
+  RefreshCw,
+  FolderTree
 } from 'lucide-react';
 import { ThreatActorCase } from '../types';
 
-export type Tab = 'overview' | 'setup' | 'infra' | 'graph' | 'stylometry' | 'fusion' | 'timeline';
+export type ActiveView = 'crawl' | 'graph' | 'infra' | 'stylometry' | 'ledger';
 
 interface HeaderProps {
-  activeTab: Tab;
-  setActiveTab: (tab: Tab) => void;
+  activeView: ActiveView;
+  setActiveView: (v: ActiveView) => void;
   cases: ThreatActorCase[];
   selectedCase: ThreatActorCase;
   setSelectedCase: (c: ThreatActorCase) => void;
-  onOpenExport: () => void;
-  onOpenNewTarget: () => void;
-  onOpenCrawlModal: () => void;
+  recordCount: number;
+  nodeCount: number;
+  edgeCount: number;
+  isInspectorOpen: boolean;
+  onToggleInspector: () => void;
+  onExportReport: (format: 'pdf' | 'stix' | 'csv') => void;
+  onTriggerCrawl: () => void;
+  isBackendConnected: boolean;
 }
 
-const navigation: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
-  { id: 'overview', label: 'Case Dossier', icon: Waypoints },
-  { id: 'setup', label: 'Testbed Topology', icon: Settings2 },
-  { id: 'infra', label: 'Infrastructure Leaks', icon: ScanSearch },
-  { id: 'graph', label: 'Cryptographic Graph', icon: Network },
-  { id: 'stylometry', label: 'Stylometric Audit', icon: Sparkles },
-  { id: 'fusion', label: 'Attribution Matrix', icon: Layers },
-  { id: 'timeline', label: 'OpSec Timeline', icon: Clock },
+const navViews: Array<{ id: ActiveView; num: string; label: string; icon: React.ElementType }> = [
+  { id: 'crawl', num: '01', label: 'Investigation & Crawl', icon: Radio },
+  { id: 'graph', num: '02', label: 'Entity Relationship Graph', icon: Network },
+  { id: 'infra', num: '03', label: 'Infrastructure Correlator', icon: Server },
+  { id: 'stylometry', num: '04', label: 'Stylometric Persona Profiler', icon: Scale },
+  { id: 'ledger', num: '05', label: 'Evidence Provenance Ledger', icon: FileSpreadsheet },
 ];
 
 export const Header: React.FC<HeaderProps> = ({
-  activeTab,
-  setActiveTab,
+  activeView,
+  setActiveView,
   cases,
   selectedCase,
   setSelectedCase,
-  onOpenExport,
-  onOpenNewTarget,
-  onOpenCrawlModal,
+  recordCount,
+  nodeCount,
+  edgeCount,
+  isInspectorOpen,
+  onToggleInspector,
+  onExportReport,
+  onTriggerCrawl,
+  isBackendConnected,
 }) => {
-  const [utcTime, setUtcTime] = useState<string>('');
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [caseDropdownOpen, setCaseDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const caseDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdowns on outside click
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setUtcTime(now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC');
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setExportDropdownOpen(false);
+      }
+      if (caseDropdownRef.current && !caseDropdownRef.current.contains(e.target as Node)) {
+        setCaseDropdownOpen(false);
+      }
     };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#1c2436] bg-[#0d1118]/95 backdrop-blur-md">
-      {/* Top Utility Strip */}
-      <div className="border-b border-[#182030] bg-[#090c12] px-4 sm:px-6 py-1 text-xs text-slate-400 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-slate-300 font-medium text-[11px]">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-            <span>Tor SOCKS5 :9050 Connected</span>
+    <header className="sticky top-0 z-40 bg-[#09090b] select-none">
+      {/* 1. TOP COMMAND BAR (Height: 44px, sticky, border-b border-zinc-800) */}
+      <div className="h-11 px-3 sm:px-4 border-b border-zinc-800 flex items-center justify-between gap-2 bg-[#09090b]">
+        
+        {/* Left: Brand Icon + Title + NTRO Badge */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="w-6 h-6 rounded-sm bg-zinc-900 border border-zinc-700/80 flex items-center justify-center text-zinc-200">
+            <Shield className="w-3.5 h-3.5 text-zinc-300" strokeWidth={1.5} />
           </div>
-          <span className="text-slate-700">|</span>
-          <span className="text-[11px] text-slate-400">Backend API :8000 Live</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono tracking-widest text-xs font-semibold text-zinc-100">
+              OBSIDIAN
+            </span>
+            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded-sm bg-zinc-900 border border-zinc-800 text-zinc-400 font-medium">
+              v1.0-NTRO-TESTBED
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 font-mono text-[11px] text-slate-400">
-          <span>{utcTime || '2026-09-11 12:00:00 UTC'}</span>
-        </div>
-      </div>
+        {/* Center: Target Selector Breadcrumb */}
+        <div className="hidden md:flex items-center gap-2 text-xs font-mono text-zinc-400">
+          <span className="text-zinc-500">Investigation</span>
+          <span className="text-zinc-600">/</span>
 
-      {/* Main Command Bar */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          
-          {/* Brand & Suite Identification */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
-              <Network className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold tracking-tight text-white">
-                  OBSIDIAN
-                </span>
-                <span className="rounded bg-slate-800 border border-slate-700 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
-                  v2.5
-                </span>
-                <span className="rounded bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5" />
-                  Verified
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                Darknet Threat Actor De-anonymization Workstation
-              </p>
-            </div>
-          </div>
+          {/* Interactive Target Selector */}
+          <div className="relative" ref={caseDropdownRef}>
+            <button
+              onClick={() => setCaseDropdownOpen(!caseDropdownOpen)}
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm hover:bg-zinc-900 hover:text-zinc-200 text-zinc-300 border border-transparent hover:border-zinc-800 transition-colors"
+            >
+              <span className="font-medium text-zinc-200">{selectedCase?.codename || 'testbed-target'}</span>
+              <span className="text-[10px] text-zinc-500">({selectedCase?.primaryHandle || 'Target'})</span>
+              <ChevronDown className="w-3 h-3 text-zinc-500" />
+            </button>
 
-          {/* Target Selection & Operations Controls */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Target Selector */}
-            <div className="flex items-center rounded-lg border border-[#24304c] bg-[#121724] px-3 py-1.5 shadow-sm">
-              <span className="text-xs text-slate-400 mr-2 font-medium">Target:</span>
-              <select
-                value={selectedCase.id}
-                onChange={(e) => {
-                  const next = cases.find((item) => item.id === e.target.value);
-                  if (next) setSelectedCase(next);
-                }}
-                className="bg-transparent text-xs font-semibold text-slate-100 outline-none cursor-pointer pr-2"
-              >
-                {cases.map((item) => (
-                  <option key={item.id} value={item.id} className="bg-[#121724] text-slate-200">
-                    {item.codename} ({item.primaryHandle})
-                  </option>
+            {caseDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1 w-64 rounded-md bg-[#121215] border border-zinc-800 shadow-xl py-1 z-50 text-xs font-sans">
+                <div className="px-2.5 py-1 text-[10px] font-mono text-zinc-500 uppercase tracking-wider border-b border-zinc-800">
+                  Select Active Investigation Case
+                </div>
+                {cases.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedCase(c);
+                      setCaseDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 flex items-center justify-between hover:bg-zinc-800/60 transition-colors ${
+                      c.id === selectedCase.id ? 'bg-zinc-800/80 text-zinc-100 font-medium' : 'text-zinc-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-mono text-xs">{c.codename}</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">{c.primaryHandle}</div>
+                    </div>
+                    <span className={`text-[10px] font-mono px-1 py-0.2 rounded border ${
+                      c.threatLevel === 'CRITICAL' 
+                        ? 'text-rose-400 border-rose-900/60 bg-rose-950/40' 
+                        : 'text-amber-400 border-amber-900/60 bg-amber-950/40'
+                    }`}>
+                      {c.threatLevel}
+                    </span>
+                  </button>
                 ))}
-              </select>
-              <span className={`ml-1 text-[10px] px-2 py-0.5 rounded font-semibold border ${
-                selectedCase.threatLevel?.includes('CRITICAL') 
-                  ? 'bg-rose-950/60 border-rose-800/80 text-rose-300' 
-                  : 'bg-amber-950/60 border-amber-800/80 text-amber-300'
-              }`}>
-                {selectedCase.threatLevel || 'CRITICAL'}
-              </span>
-            </div>
-
-            {/* Quick Actions */}
-            <button
-              onClick={onOpenCrawlModal}
-              className="flex items-center gap-1.5 rounded-lg border border-[#24304c] bg-[#141a28] hover:bg-[#1a2336] px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors shadow-sm"
-              title="Launch darknet crawler"
-            >
-              <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
-              <span>Crawl Target</span>
-            </button>
-
-            <button
-              onClick={onOpenNewTarget}
-              className="flex items-center gap-1.5 rounded-lg border border-[#24304c] bg-[#141a28] hover:bg-[#1a2336] px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors shadow-sm"
-              title="Add a new investigation target"
-            >
-              <Plus className="h-3.5 w-3.5 text-slate-400" />
-              <span>New Target</span>
-            </button>
-
-            <button
-              onClick={onOpenExport}
-              className="flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 text-xs font-medium transition-colors shadow-sm"
-              title="Export forensic intelligence dossier"
-            >
-              <FileDown className="h-3.5 w-3.5 text-white" />
-              <span>Export Dossier</span>
-            </button>
+              </div>
+            )}
           </div>
+
+          <span className="text-zinc-600">/</span>
+          <span className="text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-1.5 py-0.2 rounded-sm text-[11px]">
+            [ {recordCount} Records Extracted ]
+          </span>
         </div>
 
-        {/* Clean Segmented Navigation Tabs */}
-        <nav className="mt-3 flex gap-1 overflow-x-auto border-t border-[#182030] pt-2" aria-label="Investigation modules">
-          {navigation.map(({ id, label, icon: Icon }) => {
-            const isActive = activeTab === id;
-            return (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  isActive
-                    ? 'bg-[#1c2438] text-white shadow-sm border border-slate-700/60'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#131826]'
-                }`}
-              >
-                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-blue-400' : 'text-slate-500'}`} />
-                <span>{label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        {/* Right: System Heartbeat & Actions */}
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Tor SOCKS5 Proxy Status */}
+          <div className="hidden lg:flex items-center gap-1.5 font-mono text-[11px] text-zinc-300 px-2 py-0.5 rounded-sm bg-zinc-900/80 border border-zinc-800">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-zinc-400">Tor SOCKS5:</span>
+            <span className="text-zinc-200">127.0.0.1:9050</span>
+          </div>
+
+          {/* SQLite Store Stats */}
+          <div className="hidden xl:flex items-center gap-1 font-mono text-[11px] text-zinc-400 px-2 py-0.5 rounded-sm bg-zinc-900/50 border border-zinc-800">
+            <span className="text-zinc-500">Store:</span>
+            <span className="text-zinc-300">{nodeCount} nodes</span>
+            <span className="text-zinc-600">/</span>
+            <span className="text-zinc-300">{edgeCount} edges</span>
+          </div>
+
+          {/* Export Dossier Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs font-mono font-medium transition-colors"
+            >
+              <Download className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.5} />
+              <span>Export Dossier</span>
+              <ChevronDown className="w-3 h-3 text-zinc-400" />
+            </button>
+
+            {exportDropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 w-44 rounded-md bg-[#121215] border border-zinc-800 shadow-xl py-1 z-50 text-xs">
+                <button
+                  onClick={() => {
+                    onExportReport('pdf');
+                    setExportDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-zinc-800/70 text-zinc-200 transition-colors"
+                >
+                  <FileText className="w-3.5 h-3.5 text-rose-400" strokeWidth={1.5} />
+                  <span>PDF Forensic Report</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onExportReport('stix');
+                    setExportDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-zinc-800/70 text-zinc-200 transition-colors"
+                >
+                  <Code2 className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.5} />
+                  <span>STIX 2.1 Bundle (JSON)</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onExportReport('csv');
+                    setExportDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-zinc-800/70 text-zinc-200 transition-colors"
+                >
+                  <Table className="w-3.5 h-3.5 text-blue-400" strokeWidth={1.5} />
+                  <span>Evidence Ledger (CSV)</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Toggle Inspector Drawer */}
+          <button
+            onClick={onToggleInspector}
+            className={`p-1.5 rounded-sm border transition-colors ${
+              isInspectorOpen
+                ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 border-zinc-800'
+            }`}
+            title="Toggle Forensic Inspector (⌘I / Ctrl+I)"
+          >
+            {isInspectorOpen ? (
+              <PanelRightClose className="w-3.5 h-3.5" strokeWidth={1.5} />
+            ) : (
+              <PanelRightOpen className="w-3.5 h-3.5" strokeWidth={1.5} />
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* 2. PRIMARY VIEW CONTROLLER: Seamless Sub-Navigation Header */}
+      <nav 
+        className="h-9 px-3 sm:px-4 border-b border-zinc-800/80 bg-[#0d0d10] flex items-center gap-1 overflow-x-auto"
+        aria-label="Investigation Sub-Views"
+      >
+        {navViews.map(({ id, num, label, icon: Icon }) => {
+          const isActive = activeView === id;
+          return (
+            <button
+              key={id}
+              onClick={() => setActiveView(id)}
+              className={`flex items-center gap-2 px-2.5 py-1 rounded-sm text-xs font-mono transition-colors whitespace-nowrap ${
+                isActive
+                  ? 'bg-zinc-800/90 text-zinc-100 font-medium border border-zinc-700/80 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border border-transparent'
+              }`}
+            >
+              <span className={`text-[10px] ${isActive ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                [{num}]
+              </span>
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-zinc-200' : 'text-zinc-400'}`} strokeWidth={1.5} />
+              <span className="text-[11px] font-sans font-medium">{label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </header>
   );
 };
