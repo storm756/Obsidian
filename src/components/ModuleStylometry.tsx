@@ -120,20 +120,22 @@ export const ModuleStylometry: React.FC<ModuleStylometryProps> = ({ selectedCase
     setIsAiAuditing(true);
     setAiReport(null);
     try {
-      let res = await fetch('/api/gemini-persona-audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          textA,
-          textB,
-          handleA,
-          handleB,
-          metrics: comparison.metricsComparison,
-        }),
-      });
-
-      if (!res.ok) {
+      let res: Response;
+      try {
         res = await fetch('http://localhost:8000/api/gemini-persona-audit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            textA,
+            textB,
+            handleA,
+            handleB,
+            metrics: comparison.metricsComparison,
+          }),
+        });
+        if (!res.ok) throw new Error('API status ' + res.status);
+      } catch {
+        res = await fetch('/api/gemini-persona-audit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -156,7 +158,7 @@ export const ModuleStylometry: React.FC<ModuleStylometryProps> = ({ selectedCase
       }
     } catch (e: any) {
       console.error('Audit failed:', e);
-      setAiReport(`Forensic Linguistic Analysis Service Error: ${e.message || 'Unable to connect to Gemini API endpoint.'}`);
+      setAiReport(`Forensic Linguistic Analysis Service Error: ${e.message || 'Unable to connect to AI analysis endpoint.'}`);
     } finally {
       setIsAiAuditing(false);
     }
@@ -518,7 +520,7 @@ export const ModuleStylometry: React.FC<ModuleStylometryProps> = ({ selectedCase
                     NTRO Cyber Attribution Intelligence Memorandum
                   </h3>
                   <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-purple-950/60 border border-purple-700/60 text-purple-300">
-                    GEMINI 3.6 FLASH · SYNTHESIS LIVE
+                    AI FORENSIC ENGINE · SYNTHESIS LIVE
                   </span>
                 </div>
                 <div className="flex items-center gap-3 font-mono text-[10px] text-zinc-500 mt-0.5">

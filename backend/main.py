@@ -699,7 +699,7 @@ async def get_timeline(case_id: Optional[str] = None):
     return events
 
 
-def call_gemini_api(prompt: str, model: str = "gemini-3.6-flash") -> str:
+def call_gemini_api(prompt: str, model: str = "gemini-3.1-flash-lite") -> str:
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         try:
@@ -903,8 +903,8 @@ Provide a concise, highly professional 4-section forensic evaluation:
 4. Forensic Authorship Conclusion (Definitive evidentiary assessment: High Confidence Same Author, Probable Same Author, or Inconclusive, with reasoning suitable for investigative case documentation)."""
 
     try:
-        result = call_gemini_api(prompt, model="gemini-3.6-flash")
-        return {"provider": "gemini-3.6-flash", "analysis": result}
+        result = call_gemini_api(prompt, model="gemini-3.1-flash-lite")
+        return {"provider": "gemini-3.1-flash-lite", "analysis": result}
     except Exception as e:
         return {"error": str(e), "details": "Gemini API call failed"}
 
@@ -941,8 +941,8 @@ Produce a formal, highly structured 4-section de-anonymization intelligence asse
 4. BEHAVIORAL STYLOMETRIC AUDIT & LEGAL ADMISSIBILITY (Idiosyncratic syntax preservation, court admissibility under Indian IT Act 2000 / Daubert standard, and recommended legal steps)."""
 
     try:
-        result = call_gemini_api(prompt, model="gemini-3.6-flash")
-        return {"provider": "gemini-3.6-flash", "dossier": result}
+        result = call_gemini_api(prompt, model="gemini-3.1-flash-lite")
+        return {"provider": "gemini-3.1-flash-lite", "dossier": result}
     except Exception as e:
         return {"error": str(e), "details": "Gemini synthesis failed"}
 
@@ -968,8 +968,8 @@ Provide a concise, 3-section forensic network assessment:
 3. Subpoena & Datacenter Interception Plan (Concrete steps for LEA to target the upstream ISP/hosting provider)."""
 
     try:
-        result = call_gemini_api(prompt, model="gemini-3.6-flash")
-        return {"provider": "gemini-3.6-flash", "analysis": result}
+        result = call_gemini_api(prompt, model="gemini-3.1-flash-lite")
+        return {"provider": "gemini-3.1-flash-lite", "analysis": result}
     except Exception as e:
         return {"error": str(e), "details": "Gemini infra analysis failed"}
 

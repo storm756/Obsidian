@@ -237,13 +237,13 @@ Provide a concise, highly professional 4-section forensic evaluation:
 4. Forensic Authorship Conclusion (Definitive evidentiary assessment: High Confidence Same Author, Probable Same Author, or Inconclusive, with reasoning suitable for investigative case documentation).`;
 
       const geminiResponse = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.1-flash-lite',
         contents: prompt,
       });
 
       const analysisText = geminiResponse.text || 'Forensic analysis completed.';
       res.json({
-        provider: 'gemini-3.6-flash',
+        provider: 'gemini-3.1-flash-lite',
         analysis: analysisText
       });
     } catch (err: any) {
@@ -288,12 +288,12 @@ Produce a formal, highly structured 4-section de-anonymization intelligence asse
 4. BEHAVIORAL STYLOMETRIC AUDIT & LEGAL ADMISSIBILITY (Idiosyncratic syntax preservation, court admissibility under Indian IT Act 2000 / Daubert standard, and recommended legal steps).`;
 
       const geminiResponse = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.1-flash-lite',
         contents: prompt,
       });
 
       res.json({
-        provider: 'gemini-3.6-flash',
+        provider: 'gemini-3.1-flash-lite',
         dossier: geminiResponse.text || 'Intelligence synthesis completed.'
       });
     } catch (err: any) {
@@ -330,12 +330,12 @@ Provide a concise, 3-section forensic network assessment:
 3. Subpoena & Datacenter Interception Plan (Concrete steps for LEA to target the upstream ISP/hosting provider).`;
 
       const geminiResponse = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.1-flash-lite',
         contents: prompt,
       });
 
       res.json({
-        provider: 'gemini-3.6-flash',
+        provider: 'gemini-3.1-flash-lite',
         analysis: geminiResponse.text || 'Infrastructure evaluation completed.'
       });
     } catch (err: any) {

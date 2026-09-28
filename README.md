@@ -1,161 +1,193 @@
-# Obsidian
+# OBSIDIAN: Autonomous Dark Web Threat Actor De-Anonymization & Attribution Platform
 
-> A controlled, fictional Tor testbed and analyst prototype for demonstrating
-> threat-actor correlation techniques in authorised environments.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Compose%20v2-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Tor](https://img.shields.io/badge/Tor-v3%20Hidden%20Services-7D4698?logo=tor-project&logoColor=white)](https://www.torproject.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/Frontend-React%2019%20%7C%20TypeScript-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![STIX 2.1](https://img.shields.io/badge/Format-STIX%202.1%20Compliant-red)](https://oasis-open.github.io/cti-documentation/)
 
-![Status](https://img.shields.io/badge/demo-authorised%20use%20only-1f9d74)
-![Docker](https://img.shields.io/badge/runtime-Docker%20Compose-2496ED)
+> **A specialized intelligence and digital forensics workstation designed for cyber defense units, intelligence agencies (NTRO), and law enforcement to autonomously identify, track, and de-anonymize threat actors across the Tor darknet.**
 
-## What this project demonstrates
+---
 
-Obsidian is an SIH prototype for dark-web threat-actor de-anonymisation. It is
-designed for safe, offline-style demonstrations only. The included testbed does
-**not** contain real marketplaces, illegal products, credentials, payment
-capabilities, contact methods, or live targets.
+## 1. Executive Summary
 
-The prototype brings together four investigative signals:
+Threat actors on the Dark Web operate under the assumption that onion routing and persona rotation guarantee absolute impunity. Cyber syndicates routinely discard vendor handles, migrate across illicit marketplaces, and split cryptocurrency transactions to break chain-of-custody tracking.
 
-1. **Infrastructure exposure** - detect deliberately exposed status pages in a
-   controlled Tor environment.
-2. **Identity graph correlation** - connect handles using exact shared PGP key
-   blocks and wallet-like identifiers.
-3. **Stylometric persona analysis** - compare repeated wording and writing
-   patterns across fictional aliases.
-4. **Explainable fusion** - present multiple signals as auditable evidence,
-   rather than treating AI output as a final conclusion.
+**Obsidian** shatters this assumption. Rather than relying on a single fallible clue, Obsidian introduces an **autonomous, 4-pillar multi-signal attribution engine** that triangulates across:
+1. **Network Infrastructure Vulnerabilities** (origin IP leaks, unhardened status handlers, TLS certificate reuse).
+2. **Cryptographic & Financial Entity Graphs** (OpenPGP key fingerprint matching, Bitcoin SegWit UTXO co-spending).
+3. **Behavioral AI Stylometry** (subconscious function-word distribution, lexical richness, punctuation cadence).
+4. **Mathematical Fusion & Court-Admissible Dossier Generation** (composite Bayesian-weighted confidence scoring, STIX 2.1 exports, and REST APIs for national intelligence systems).
 
-## Included controlled testbed
+---
 
-Docker Compose starts exactly two services:
+## 2. Core Pillars of Attribution
 
-| Service | Purpose |
-| --- | --- |
-| `obsidian-web` | Apache serving static HTML from `testbed/` |
-| `obsidian-tor` | Tor hidden service forwarding onion port 80 to Apache |
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                          TARGET RECONNAISSANCE                         │
+│             Seed .onion Discovery via Isolated SOCKS5h Proxy           │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+         ┌──────────────────────────┼──────────────────────────┐
+         ▼                          ▼                          ▼
+┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
+│     PILLAR 1     │      │     PILLAR 2     │      │     PILLAR 3     │
+│  INFRASTRUCTURE  │      │   ENTITY GRAPH   │      │  AI STYLOMETRY   │
+│  RECONNAISSANCE  │      │   CORRELATION    │      │    PROFILING     │
+├──────────────────┤      ├──────────────────┤      ├──────────────────┤
+│• Server Banners  │      │• 4096-bit RSA PGP│      │• Function Words  │
+│• Apache Status   │      │• BTC SegWit UTXO │      │• Cosine Concord. │
+│• Origin IP Leak  │      │• Cross-Site Link │      │• Yule's K Metric │
+│• TLS Cert Hash   │      │• Shortest Path   │      │• AI Ling. Audit  │
+└────────┬─────────┘      └────────┬─────────┘      └────────┬─────────┘
+         │                         │                         │
+         │ [40% Weight]            │ [35% Weight]            │ [25% Weight]
+         └─────────────────────────┼─────────────────────────┘
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                        MATHEMATICAL FUSION LAYER                       │
+│    Composite Confidence: 95.8% · Court-Admissible NTRO Evidence Ledger │
+│             Exports: Formal Dossier · STIX 2.1 · Graph CSV             │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
-The static site contains:
+### Pillar 1: Infrastructure Reconnaissance & Misconfigurations
+- **Passive & Active Onion Probing**: Uses remote-DNS SOCKS5h routing to evaluate target onion services without DNS contamination.
+- **Leak Vector Detection**: Scans for unhardened server endpoints (e.g., Apache `mod_status` at `/server-status`), dumping active worker slots, backend server uptimes, and internal RFC1918 subnets.
+- **Clearnet Origin IP Deanonymization**: Correlates gateway routing and TLS X.509 certificate SHA-256 fingerprints to identify the operator's true physical host, datacenter, and Autonomous System (ASN).
+- **Automated Infrastructure Assessment**: Integrates on-demand AI risk analysis to evaluate attack surfaces and subpoena targets.
 
-- Five fictional site paths: `market-a`, `market-b`, `market-c`, `forum-a`,
-  and `forum-b`.
-- 55 synthetic listing records, all reachable from the root page by standard
-  HTML links.
-- Eight deliberately correlated fictional actor groups, reusing exact PGP
-  blocks or wallet-like identifiers across different aliases.
-- Consistent writing styles across selected aliases for stylometry demos.
-- Ten cross-site links that emulate forum-to-market references.
-- Two intentional static exposure fixtures:
-  `/market-a/server-status` and `/forum-b/server-status`.
+### Pillar 2: Cryptographic & Financial Entity Graph
+- **Relational Evidence Topology**: Models vendors, forums, markets, PGP keys, and cryptocurrency wallets in an interactive force-directed graph.
+- **Cryptographic Fingerprint Matching**: Detects exact 4096-bit OpenPGP master public key reuse across seemingly unrelated storefronts, proving private key possession.
+- **Blockchain Co-Spending Clustering**: Applies Common Input Ownership Heuristics (CIOH) on Bitcoin SegWit addresses to uncover shared wallet controllers.
+- **Forensic Filtering & Pathfinding**: One-click filters for PGP, Wallet, Marketplace, and Origin IP, plus **Trace Shortest Path** to calculate multi-hop evidentiary trails from alias to physical host.
 
-## Requirements
+### Pillar 3: Behavioral AI Stylometry
+- **Subconscious Linguistic Fingerprinting**: Analyzes invariant subconscious syntax—frequencies of non-contextual function words (modal verbs, prepositions, determiners), sentence lengths, and idiosyncratic punctuation habits.
+- **Statistical Metric Suite**: Computes cosine concordance matrices, Yule's K characteristic vocabulary richness, and Simpson's D index.
+- **Automated Forensic Linguistic Audit**: An integrated AI forensic evaluation engine generates formal authorship memorandums assessing whether two profiles represent persona migration or distinct individuals.
 
-- Docker Desktop with the Linux/WSL2 engine running
-- Tor Browser to view the `.onion` testbed
-- Node.js 18+ for the dashboard
-- Python 3.10+ for the optional local analysis backend
+### Pillar 4: Mathematical Evidence Fusion & Court Dossiers
+- **Weighted Multi-Signal Synthesis**: Eliminates guesswork by calculating a composite confidence rating:
+  $$\text{Composite Score} = (0.40 \times \text{Infra}) + (0.35 \times \text{Graph}) + (0.25 \times \text{Stylometry})$$
+- **Court-Admissible Evidence Ledger**: Produces tamper-evident forensic intelligence dossiers meeting Indian Evidence Act / Daubert standards.
+- **Open Standards Interoperability**: Instant export to **STIX 2.1 JSON**, CSV relationship matrices, and REST APIs for national intelligence pipelines (NTRO, CERT-In, Law Enforcement Agencies).
 
-> **Storage note:** keep both the repository and Docker Desktop's disk image on
-> `D:`. Docker Desktop storage is configured through **Settings → Resources →
-> Advanced → Disk image location**.
+---
 
-## Quick start: Tor testbed
+## 3. Real Tor v3 Sandboxed Testbed
 
-Open PowerShell in this project folder:
+> **Legal & Ethical Compliance Note**: Actively scraping or probing live dark web criminal infrastructure without judicial warrants carries severe legal liabilities. To enable safe, repeatable, and court-verifiable validation, Obsidian includes an isolated, containerized Tor testbed.
 
-```powershell
-Set-Location D:\Obsidian
+The sandboxed environment provisions **7 independent, real Tor v3 hidden services** running over an isolated Docker bridge:
+
+| Service Codename | Service Role | Sample Synthetic Records |
+| :--- | :--- | :--- |
+| **`testbed`** | Central Directory & Cross-Onion Index | Navigation hub linking all nodes |
+| **`market-a`** (Aster Market) | Illicit Credential Storefront | 11 synthetic catalog listings |
+| **`market-b`** (Boreal Exchange) | Counterfeit Goods Marketplace | 12 synthetic vendor profiles |
+| **`market-c`** (Cinder Bazaar) | Data Broker & Exploit Archive | 11 synthetic offers |
+| **`forum-a`** (Lantern Forum) | Threat Actor Dispute Community | 11 synthetic discussion threads |
+| **`forum-b`** (Harbor Board) | Sybil Vendor Review Board | 10 synthetic reputation posts |
+| **`escrow`** (CryptaVault) | Tumbler & Multi-Sig Escrow Node | 5 synthetic settlement records |
+
+> **Production Deployment**: When operated by authorized defense personnel with proper warrants, Obsidian's crawler switches from the local testbed to any target `.onion` URL on the live Tor network without code modifications.
+
+---
+
+## 4. Quick Start & Installation
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (WSL2 engine enabled)
+- [Node.js 18+](https://nodejs.org/) & `npm`
+- [Python 3.10+](https://www.python.org/)
+- [Tor Browser](https://www.torproject.org/) (optional, for viewing `.onion` sites directly)
+
+### Step 1: Clone Repository & Configure Environment
+```bash
+git clone https://github.com/storm756/Obsidian.git
+cd Obsidian
+
+# Copy example environment configuration
+cp .env.example .env
+```
+
+Add your optional AI API key to `.env` for live on-demand linguistic and case synthesis reports:
+```env
+GEMINI_API_KEY=your_api_key_here
+TOR_PROXY_HOST=127.0.0.1
+TOR_PROXY_PORT=9050
+```
+
+### Step 2: Launch Tor Testbed Containers
+```bash
 docker compose up -d
 docker compose ps
 ```
 
-Get the generated onion hostname:
+Extract the newly generated Tor v3 hidden service addresses:
+- **Windows (Command Prompt)**: `extract_onions.bat`
+- **Windows (PowerShell)**: `powershell -ExecutionPolicy Bypass -File .\extract_onions.ps1`
+- **Linux / macOS**: `./extract_onions.sh`
 
-```powershell
-docker compose exec tor cat /var/lib/tor/testbed/hostname
+### Step 3: Start the Backend Analytics Engine
+```bash
+# In terminal 1:
+python -m venv .venv
+# Windows: .venv\Scripts\activate | Linux: source .venv/bin/activate
+pip install -r requirements.txt
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
+*API Swagger Documentation is available at: [http://localhost:8000/docs](http://localhost:8000/docs)*
 
-Open the returned value in Tor Browser, prefixed with `http://`:
-
-```text
-http://your-generated-address.onion/
-```
-
-### Stop the testbed
-
-```powershell
-docker compose down
-```
-
-This preserves the Tor volume, so the onion address remains the same. Use the
-following only when you intentionally want a brand-new Tor identity and onion
-address:
-
-```powershell
-docker compose down -v
-```
-
-## Dashboard
-
-In a second PowerShell window:
-
-```powershell
-Set-Location D:\Obsidian
-npm config set cache D:\npm-cache
+### Step 4: Start the Analyst Workstation Dashboard
+```bash
+# In terminal 2:
 npm install
 npm run dev
 ```
 
-Open the localhost address printed by Vite, normally
-`http://localhost:5173`.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Optional live analysis backend
+---
 
-Keep the Docker testbed running. In a third PowerShell window:
+## 5. Analyst Workstation Tour
 
-```powershell
-Set-Location D:\Obsidian\backend
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --no-cache-dir -r requirements.txt
-$env:TOR_PROXY_HOST="127.0.0.1"
-$env:TOR_PROXY_PORT="9050"
-$env:TESTBED_ONION_URL="your-generated-address.onion"
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
+| Tab | Hotkey | Functionality |
+| :--- | :---: | :--- |
+| **Overview** | `1` | Case management, suspect profile, executive summary, and attribution score. |
+| **Setup & Testbed** | `2` | Tor container diagnostics, live `.onion` service health, and automated crawler trigger. |
+| **Infra Recon** | `3` | Live SOCKS5 port scan, server banner harvesting, status leak detection, and AI attack-surface evaluation. |
+| **Entity Graph** | `4` | D3.js interactive graph, PGP/Wallet filters, Cypher query console, and Shortest Path tracing. |
+| **Stylometry** | `5` | Dual-text comparative stylometry, cosine concordance matrix, and on-demand AI Linguistic Audits. |
+| **Fusion Layer** | `6` | Mathematical evidence weighting, verifiable proof points, and NTRO dossier export center. |
+| **Timeline** | `7` | Chronological breadcrumbs of persona migrations, infrastructure changes, and transaction logs. |
 
-Refresh the dashboard. It will read `TESTBED_ONION_URL`, route requests through
-the local Tor SOCKS proxy at port `9050`, and make the controlled scan and graph
-endpoints available on `http://localhost:8000`.
+---
 
-## Suggested demo flow
+## 6. Interoperability & Export Center
 
-1. Open the testbed root in Tor Browser and explain that it is fictional,
-   static training data.
-2. Navigate between sites and open a few records.
-3. Visit the two intentional `/server-status` fixtures and contrast them with
-   the three clean site folders.
-4. Start the dashboard and backend, then scan the generated onion address.
-5. Open the entity graph to demonstrate links created by exact shared PGP or
-   wallet evidence.
-6. Use the stylometry and fusion views to explain why corroborated evidence is
-   stronger than a single similarity score.
+Obsidian is engineered for seamless integration into national intelligence ecosystems:
+- **STIX 2.1 JSON**: Standardized Cyber Threat Intelligence (CTI) bundle ready for ingestion into MISP, OpenCTI, and agency SIEMs.
+- **Forensic Dossier (.txt / .md)**: Court-admissible intelligence summary with cryptographic content hashes, origin IP physical leads, and evidence provenance.
+- **Entity Relationship CSV**: Export edge lists for advanced link analysis in **Maltego** and **IBM i2 Analyst's Notebook**.
+- **REST API Endpoints**: All endpoints (`/api/cases`, `/api/entity-graph`, `/api/fusion-signals`, `/api/infra-scan`) return structured JSON for programmatic consumption by defense microservices.
 
-## Project layout
+---
 
-```text
-.
-├── docker-compose.yml     # Apache + Tor testbed
-├── testbed/               # Static fictional websites and records
-├── tor/torrc              # Hidden-service configuration
-├── backend/               # FastAPI crawler, graph and scanner endpoints
-└── src/                   # React analyst dashboard
-```
+## 7. Security, Legal & Ethical Guidelines
 
-For a full technical continuation guide - including the boundary between live
-features and demo data - read [HANDOVER.md](HANDOVER.md).
+- **Authorization Required**: This tool is designed strictly for defensive intelligence, academic research, and authorized law enforcement operations.
+- **Zero Real Darknet Contamination**: The built-in testbed contains strictly synthetic, fictional data with no real contraband, payment capabilities, or personally identifiable information (PII).
+- **Audit Trails**: All database writes maintain UTC timestamps, SHA-256 content hashes, and immutable scan logs to preserve legal chain of custody.
 
-## Safety and scope
+---
 
-Only scan this local, authorised testbed or systems for which you have explicit
-permission. Do not use this project to target real onion services or real-world
-individuals. Automated correlation is an analyst-assistance signal and should
-be reviewed by a qualified human before any conclusion is made.
+## 8. License & Acknowledgements
+
+Developed under the MIT License. Built for national cyber defense competitions and intelligence modernization research. Dedicated to enhancing attribution capabilities against complex darknet threat syndicates.

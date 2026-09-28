@@ -54,14 +54,16 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
     setAiError(null);
     setAiDossier(null);
     try {
-      let res = await fetch('/api/gemini-case-synthesis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetCase: selectedCase, signals }),
-      });
-
-      if (!res.ok) {
+      let res: Response;
+      try {
         res = await fetch('http://localhost:8000/api/gemini-case-synthesis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetCase: selectedCase, signals }),
+        });
+        if (!res.ok) throw new Error('API status ' + res.status);
+      } catch {
+        res = await fetch('/api/gemini-case-synthesis', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ targetCase: selectedCase, signals }),
@@ -207,7 +209,7 @@ export const FusionLayer: React.FC<FusionLayerProps> = ({
                     NTRO Court-Admissible De-Anonymization Synthesis Dossier
                   </h3>
                   <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-purple-950/60 border border-purple-700/60 text-purple-300">
-                    GEMINI 3.6 FLASH · LIVE SYNTHESIS
+                    AI FORENSIC ENGINE · LIVE SYNTHESIS
                   </span>
                 </div>
                 <div className="flex items-center gap-3 font-mono text-[10px] text-zinc-500 mt-0.5">

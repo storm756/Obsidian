@@ -54,13 +54,16 @@ export const ModuleInfraScan: React.FC<ModuleInfraScanProps> = ({
     setAiInfraError(null);
     setAiInfraReport(null);
     try {
-      let res = await fetch('/api/gemini-infra-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scanResult }),
-      });
-      if (!res.ok) {
+      let res: Response;
+      try {
         res = await fetch('http://localhost:8000/api/gemini-infra-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scanResult }),
+        });
+        if (!res.ok) throw new Error('API status ' + res.status);
+      } catch {
+        res = await fetch('/api/gemini-infra-analysis', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ scanResult }),
@@ -296,10 +299,10 @@ export const ModuleInfraScan: React.FC<ModuleInfraScanProps> = ({
                     <div className="flex items-center gap-2">
                       <Brain className="w-4 h-4 text-amber-400" />
                       <span className="font-mono text-xs font-bold text-white uppercase">
-                        Gemini Infrastructure Attribution Analysis
+                        Automated Infrastructure Attribution Analysis
                       </span>
                       <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-700/60 text-amber-300">
-                        GEMINI 3.6 FLASH · LIVE
+                        AI FORENSIC ENGINE · LIVE
                       </span>
                     </div>
 
